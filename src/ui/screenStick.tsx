@@ -30,11 +30,10 @@ export const ScreenStick = ({onInput}: IScreenStickProps) => {
         let pointerEnd: {x: number, y: number} = null;
         
         const updatePointer = ()=>{
-            if (!pointerStart || !pointerEnd || pointerId == null){
-                setPointer(null);
-                return;
-            }
             setPointer(()=>{
+                if (!pointerStart || !pointerEnd || pointerId == null){
+                    return null;
+                }
                 const length = Math.hypot(pointerEnd.x - pointerStart.x, pointerEnd.y - pointerStart.y);
                 const divisor = Math.max(length, 50);
                 return {

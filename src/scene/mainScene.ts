@@ -1,4 +1,4 @@
-import type { World } from "cannon-es";
+import { Body, Box, Vec3, type World } from "cannon-es";
 import { AmbientLight, DirectionalLight, type Group, type Scene } from "three";
 import { GLTFLoader } from "three/addons";
 
@@ -8,12 +8,29 @@ export class MainScene {
     constructor(scene: Scene, world: World) {
         const loader = new GLTFLoader();
         loader.load(
-            './brickwall.glb', // Путь к файлу из папки public
+            './brickwall3.glb', // Путь к файлу из папки public
             (gltf) => {
                 this.loadedModel = gltf.scene;
                 this.loadedModel.castShadow = true;
                 this.loadedModel.receiveShadow = true;
                 this.loadedModel.traverse(it=>{it.castShadow = true; it.receiveShadow = true});
+                const crystal = this.loadedModel.getObjectByName('Cube013').clone();
+                console.log(crystal);
+                crystal.position.set(0, 0.5, 0);
+                const boxBody = new Body({
+                    mass: 0,
+                    position: new Vec3(0, 0.5, 0),
+                    shape: new Box(new Vec3(0.25, 0.25, 0.25)),
+                    isTrigger: true
+                });
+                boxBody.addEventListener('collide',(e: any)=>{
+                    console.log(e);
+                });
+                world.addEventListener('endContact',(e: any)=>{
+                    console.log(e);
+                });
+                world.addBody(boxBody);
+                scene.add(crystal);
                 scene.add(this.loadedModel);
             },
             (progress) => {

@@ -31,7 +31,10 @@ export class GameRenderer {
         );
         this.camera.position.z = 5;
         this.camera.position.y = 5;
-        this.camera.rotation.set(-Math.PI / 4, 0, 0);
+        this.camera.rotation.reorder('YXZ');
+        this.camera.rotation.set(-Math.PI / 6, -Math.PI / 4, 0 );
+        this.camera.layers.enable(0);
+        this.camera.layers.enable(1);
 
         this.renderer = new THREE.WebGLRenderer({
             canvas: canvas,
@@ -74,7 +77,9 @@ export class GameRenderer {
         this.player.animate();
         //console.log(this.world.bodies);
         if(this.player.loadedModel){
-            this.camera.position.set(this.player.loadedModel.position.x, 5, this.player.loadedModel.position.z + 5);
+            const angle = -Math.PI / 10;
+            this.camera.rotation.set(-Math.PI / 6, angle, 0 );
+            this.camera.position.set(this.player.loadedModel.position.x + Math.sin(angle) * 3, 2, this.player.loadedModel.position.z + Math.cos(angle) * 3);
         }
         this.clock.update(timeStamp);
         this.world.step(1/60, delta, 3);
