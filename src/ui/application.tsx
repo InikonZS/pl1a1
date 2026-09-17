@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import style from './application.module.css'
 import { GameRenderer } from '../scene/gameRenderer';
 import { ScreenStick } from './screenStick';
+import { GameScreen } from './gameScreen';
 
 export const App = () => {
   const appRef = useRef<HTMLDivElement>(null);
@@ -29,6 +30,7 @@ export const App = () => {
           }
           sceneRenderer.input(data);
         }}></ScreenStick>
+        <GameScreen></GameScreen>
       </div>
     </div>
 }

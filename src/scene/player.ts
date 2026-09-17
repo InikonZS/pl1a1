@@ -62,7 +62,7 @@ export class Player {
             mass: 1, // Объект динамический, на него действует гравитация
             position: new Vec3(0, 3, 0), // Поднимаем на высоту 5 метров
             // В Cannon размеры коробки задаются как "полу-расширения" (половина стороны)
-            shape: new Box(new Vec3(0.55, 0.5, 0.55)) 
+            shape: new Box(new Vec3(0.55, 0.5, 0.55))
         });
         world.addBody(this.boxBody);
         this.boxBody.fixedRotation = true; 

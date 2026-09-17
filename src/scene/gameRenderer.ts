@@ -45,10 +45,10 @@ export class GameRenderer {
         this.renderer.shadowMap.type = THREE.PCFShadowMap;
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-        this.geometry = new THREE.BoxGeometry(1, 1, 1);
+        /*this.geometry = new THREE.BoxGeometry(1, 1, 1);
         this.material = new THREE.MeshBasicMaterial({ color: 0x00ff88, wireframe: true });
         this.cube = new THREE.Mesh(this.geometry, this.material);
-        this.scene.add(this.cube);
+        this.scene.add(this.cube);*/
 
         window.addEventListener('resize', this.handleResize);
 
@@ -68,8 +68,8 @@ export class GameRenderer {
         const delta = Math.min(Math.abs(this.clock.getDelta()), 1 / 5);
         //console.log(delta);
 
-        this.cube.rotation.x += 0.01;
-        this.cube.rotation.y += 0.01;
+        //this.cube.rotation.x += 0.01;
+        //this.cube.rotation.y += 0.01;
 
         this.renderer.render(this.scene, this.camera);
         this.animationFrameId = requestAnimationFrame(this.animate);

@@ -1,9 +1,11 @@
 import { Body, Box, Vec3, type World } from "cannon-es";
 import { AmbientLight, DirectionalLight, type Group, type Scene } from "three";
 import { GLTFLoader } from "three/addons";
+import { Crystal } from "./crystal";
 
 export class MainScene {
     loadedModel: Group;
+    crystal: Crystal;
 
     constructor(scene: Scene, world: World) {
         const loader = new GLTFLoader();
@@ -14,7 +16,7 @@ export class MainScene {
                 this.loadedModel.castShadow = true;
                 this.loadedModel.receiveShadow = true;
                 this.loadedModel.traverse(it=>{it.castShadow = true; it.receiveShadow = true});
-                const crystal = this.loadedModel.getObjectByName('Cube013').clone();
+                /*const crystal = this.loadedModel.getObjectByName('Cube013').clone();
                 console.log(crystal);
                 crystal.position.set(0, 0.5, 0);
                 const boxBody = new Body({
@@ -29,8 +31,9 @@ export class MainScene {
                 world.addEventListener('endContact',(e: any)=>{
                     console.log(e);
                 });
-                world.addBody(boxBody);
-                scene.add(crystal);
+                world.addBody(boxBody);*/
+                //scene.add(crystal);
+                this.crystal = new Crystal(scene, world);
                 scene.add(this.loadedModel);
             },
             (progress) => {
@@ -52,6 +55,7 @@ export class MainScene {
 
     animate(){
         if (this.loadedModel) {
+            this.crystal.animate()
             //this.loadedModel.rotation.y += 0.005; // Вращаем модель, когда она загрузилась
         }
     }
