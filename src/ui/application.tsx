@@ -3,6 +3,7 @@ import style from './application.module.css'
 import { GameRenderer } from '../scene/gameRenderer';
 import { ScreenStick } from './screenStick';
 import { GameScreen } from './gameScreen';
+import { PackshotScreen } from './packshot';
 
 export const App = () => {
   const appRef = useRef<HTMLDivElement>(null);
@@ -34,6 +35,8 @@ export const App = () => {
     }
   }, []);
 
+  const isFinished = inventory.filter(it=>it != null).length >=3;
+
   return <div ref={appRef} className={style.app}>
       <canvas ref={canvasRef} width={1280} height={760} className={style.canvas}></canvas>
       <div ref={overlayRef} className={style.overlay}>
@@ -43,7 +46,8 @@ export const App = () => {
           }
           sceneRenderer.input(data);
         }}></ScreenStick>
-        <GameScreen inventory={inventory}></GameScreen>
+        {!isFinished && <GameScreen inventory={inventory}></GameScreen>}
+        {isFinished && <PackshotScreen></PackshotScreen>}
       </div>
     </div>
 }
