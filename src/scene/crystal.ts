@@ -7,7 +7,7 @@ class CrystalInstance {
     loadedModel: Group<Object3DEventMap>;
     animationMixer: AnimationMixer<AnimationMixerEventMap>;
 
-    constructor(scene: Scene, world: World, gltf: GLTF, position: Vector3Like, color: Vector3Like) {
+    constructor(scene: Scene, world: World, gltf: GLTF, position: Vector3Like, color: Vector3Like, onCollect: ()=>void) {
         this.loadedModel = gltf.scene.clone();
         this.loadedModel.traverse(it=>{
             if (it instanceof Mesh){
@@ -43,6 +43,7 @@ class CrystalInstance {
             this.animationMixer.addEventListener('finished', (e) => {
                 if (e.action === collectAction) {
                     this.loadedModel.visible = false;
+                    onCollect();
                 }
             });
 
@@ -66,6 +67,7 @@ class CrystalInstance {
 export class Crystal {
     instances: CrystalInstance[];
     loaded: boolean;
+    onCollect: (variant: 'red' | 'green' | 'blue')=>void;
 
     constructor(scene: Scene, world: World) {
         const loader = new GLTFLoader();
@@ -75,9 +77,9 @@ export class Crystal {
                 console.log(gltf)
                 this.loaded = true;
                 this.instances = [
-                    new CrystalInstance(scene, world, gltf, {x: -2, y: 0.5, z: -2}, {x: 0.1, y: 0.9, z: 0.1}),
-                    new CrystalInstance(scene, world, gltf, {x: -2, y: 0.5, z: 6}, {x: 0.1, y: 0.3, z: 0.9}),
-                    new CrystalInstance(scene, world, gltf, {x: 4, y: 0.5, z: 5}, {x: 0.9, y: 0.1, z: 0.3}),
+                    new CrystalInstance(scene, world, gltf, {x: -2, y: 0.5, z: -2}, {x: 0.1, y: 0.9, z: 0.1}, ()=>{this.onCollect('green')}),
+                    new CrystalInstance(scene, world, gltf, {x: -2, y: 0.5, z: 6}, {x: 0.1, y: 0.3, z: 0.9}, ()=>{this.onCollect('blue')}),
+                    new CrystalInstance(scene, world, gltf, {x: 4, y: 0.5, z: 5}, {x: 0.9, y: 0.1, z: 0.3}, ()=>{this.onCollect('red')}),
                 ]
             },
             (progress) => {

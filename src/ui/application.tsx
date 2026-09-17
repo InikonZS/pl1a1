@@ -9,12 +9,25 @@ export const App = () => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [sceneRenderer, setSceneRenderer] = useState<GameRenderer>(null);
+  const [inventory, setInventory] = useState<Array<string>>(new Array(5).fill(null)); 
 
   useEffect(()=>{
     if (!canvasRef.current){
       return;
     }
     const gameRenderer = new GameRenderer(canvasRef.current);
+    gameRenderer.onCollect = (variant)=>{
+      setInventory(last=>{
+        const index = last.indexOf(null);
+        const next = [...last];
+        if (index !=-1) {
+          next[index] = variant;
+        } else {
+          next.push(variant);
+        }
+        return next;
+      });
+    }
     setSceneRenderer(gameRenderer);
     return ()=>{
       gameRenderer.destroy();
@@ -30,7 +43,7 @@ export const App = () => {
           }
           sceneRenderer.input(data);
         }}></ScreenStick>
-        <GameScreen></GameScreen>
+        <GameScreen inventory={inventory}></GameScreen>
       </div>
     </div>
 }

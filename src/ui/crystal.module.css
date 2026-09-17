@@ -1,0 +1,70 @@
+.crystalContainer{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-size: contain;
+    animation: appear 2000ms forwards;
+}
+.crystal{
+    top: 0;
+    left: 0;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: url('./crystal.png');
+    background-size: contain;
+}
+
+.red .crystal{
+    filter: brightness(1.2);
+}
+.green .crystal{
+    filter: hue-rotate(120deg) brightness(1.5);
+}
+.blue .crystal{
+    filter: hue-rotate(-120deg) brightness(1.5);
+}
+
+.glow{
+    width: 100%;
+    height: 100%;
+    background-image: url('./glow.png');
+    background-size: contain;
+    filter: hue-rotate(45deg);
+    animation: glow 2000ms infinite linear;
+}
+
+.red .glow{
+  filter: hue-rotate(-75deg);
+}
+
+.green .glow{
+  filter: hue-rotate(45deg);
+}
+
+.blue .glow{
+  filter: hue-rotate(150deg);
+}
+
+@keyframes glow{
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes appear{
+    0% {
+        transform: translate(0px, -200px) scale(0);
+    }
+    50% {
+        transform: translate(0px, -100px) scale(2);
+    }
+    100% {
+        transform: translate(0px, 0px) scale(1);
+    }
+}
+
+

@@ -6,6 +6,7 @@ import { Crystal } from "./crystal";
 export class MainScene {
     loadedModel: Group;
     crystal: Crystal;
+    onCollect: (variant: 'red' | 'green' | 'blue')=>void;
 
     constructor(scene: Scene, world: World) {
         const loader = new GLTFLoader();
@@ -34,6 +35,7 @@ export class MainScene {
                 world.addBody(boxBody);*/
                 //scene.add(crystal);
                 this.crystal = new Crystal(scene, world);
+                this.crystal.onCollect = (variant) => this.onCollect(variant);
                 scene.add(this.loadedModel);
             },
             (progress) => {

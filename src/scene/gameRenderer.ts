@@ -16,6 +16,7 @@ export class GameRenderer {
     player: Player;
     clock: THREE.Timer;
     world: World;
+    onCollect: (variant: 'red' | 'green' | 'blue')=>void;
 
     constructor(canvas: HTMLCanvasElement) {
         this.clock = new THREE.Timer();
@@ -53,6 +54,7 @@ export class GameRenderer {
         window.addEventListener('resize', this.handleResize);
 
         this.mainScene = new MainScene(this.scene, this.world);
+        this.mainScene.onCollect = (variant)=>this.onCollect(variant);
         this.player = new Player(this.scene, this.world);
 
         this.animate(Date.now());

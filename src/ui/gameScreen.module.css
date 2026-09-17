@@ -44,4 +44,5 @@
     border-radius: 10px;
     border: 1px solid #ccc;
     background-color: #0007;
+    position: relative;
 }
