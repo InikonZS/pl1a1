@@ -1,5 +1,5 @@
 import { AmbientLight, AnimationMixer, DirectionalLight, LoopRepeat, Mesh, PointLight, Vector3, type Group, type Scene } from "three";
-import { GLTFLoader } from "three/addons";
+import { GLTFLoader } from "./threefix";
 import type { IPointer } from "../ui/screenStick";
 import { Body, Box, Shape, SHAPE_TYPES, Vec3, type World } from "cannon-es";
 

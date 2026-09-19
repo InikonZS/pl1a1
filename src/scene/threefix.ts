@@ -1,0 +1,1 @@
+export{ GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";

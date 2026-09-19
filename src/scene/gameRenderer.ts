@@ -1,30 +1,32 @@
-import * as THREE from 'three';
+//import * as THREE from 'three';
 import { MainScene } from './mainScene';
 import { Player } from './player';
 import type { IPointer } from '../ui/screenStick';
 import { World } from 'cannon-es';
+import { Material, type Object3DEventMap, PerspectiveCamera, type Mesh, type BoxGeometry, Timer, PCFShadowMap, Scene, WebGLRenderer } from 'three';
 
 export class GameRenderer {
-    scene: THREE.Scene<THREE.Object3DEventMap>;
-    camera: THREE.PerspectiveCamera;
-    cube: THREE.Mesh;
-    renderer: THREE.WebGLRenderer;
+    scene: Scene<Object3DEventMap>;
+    camera: PerspectiveCamera;
+    cube: Mesh;
+    renderer: WebGLRenderer;
     animationFrameId: number;
-    geometry: THREE.BoxGeometry;
-    material: THREE.Material;
+    geometry: BoxGeometry;
+    material: Material;
     mainScene: MainScene;
     player: Player;
-    clock: THREE.Timer;
+    clock: Timer;
     world: World;
     onCollect: (variant: 'red' | 'green' | 'blue')=>void;
+    onAnimate: ()=>void;
 
     constructor(canvas: HTMLCanvasElement) {
-        this.clock = new THREE.Timer();
+        this.clock = new Timer();
         this.world = new World();
         this.world.gravity.set(0, -9.82, 0);
 
-        this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(
+        this.scene = new Scene();
+        this.camera = new PerspectiveCamera(
             75,
             window.innerWidth / window.innerHeight,
             0.1,
@@ -37,13 +39,13 @@ export class GameRenderer {
         this.camera.layers.enable(0);
         this.camera.layers.enable(1);
 
-        this.renderer = new THREE.WebGLRenderer({
+        this.renderer = new WebGLRenderer({
             canvas: canvas,
             antialias: true,
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFShadowMap;
+        this.renderer.shadowMap.type = PCFShadowMap;
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
         /*this.geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -85,7 +87,7 @@ export class GameRenderer {
         }
         this.clock.update(timeStamp);
         this.world.step(1/60, delta, 3);
-        
+        this.onAnimate?.();
     }
 
     input(data: IPointer){

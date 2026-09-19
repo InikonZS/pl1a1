@@ -4,13 +4,16 @@ import { GameRenderer } from '../scene/gameRenderer';
 import { ScreenStick } from './screenStick';
 import { GameScreen } from './gameScreen';
 import { PackshotScreen } from './packshot';
+import { Vector3 } from 'three';
+import { ActionPoint } from './actionPoint';
 
 export const App = () => {
   const appRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [sceneRenderer, setSceneRenderer] = useState<GameRenderer>(null);
-  const [inventory, setInventory] = useState<Array<string>>(new Array(5).fill(null)); 
+  const [inventory, setInventory] = useState<Array<string>>(new Array(5).fill(null));
+  const [point, setPoint] = useState<Vector3>(null);
 
   useEffect(()=>{
     if (!canvasRef.current){
@@ -29,6 +32,11 @@ export const App = () => {
         return next;
       });
     }
+    gameRenderer.onAnimate = ()=>{
+      const point = new Vector3(4, 0.5, 5).project(gameRenderer.camera);
+      
+      //setPoint(new Vector3(point.x, -point.y, point.z).multiply(new Vector3(0.5, 0.5, 1)).add(new Vector3(0.5, 0.5, 0)).multiply(new Vector3(canvasRef.current.clientWidth, canvasRef.current.clientHeight, 1)));
+    }
     setSceneRenderer(gameRenderer);
     return ()=>{
       gameRenderer.destroy();
@@ -46,6 +54,7 @@ export const App = () => {
           }
           sceneRenderer.input(data);
         }}></ScreenStick>
+        {point && <ActionPoint point={point}></ActionPoint>}
         {!isFinished && <GameScreen inventory={inventory}></GameScreen>}
         {isFinished && <PackshotScreen></PackshotScreen>}
       </div>

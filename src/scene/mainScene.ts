@@ -1,6 +1,6 @@
 import { Body, Box, Vec3, type World } from "cannon-es";
 import { AmbientLight, DirectionalLight, type Group, type Scene } from "three";
-import { GLTFLoader } from "three/addons";
+import { GLTFLoader } from "./threefix";
 import { Crystal } from "./crystal";
 
 export class MainScene {

@@ -7,7 +7,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
       }
-    }
+    },
   },
   base: "./",
   publicDir: './public',

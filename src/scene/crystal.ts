@@ -1,6 +1,6 @@
 import { Body, Box, Vec3, type World } from "cannon-es";
 import { AmbientLight, AnimationMixer, Color, DirectionalLight, LoopOnce, LoopRepeat, Material, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, Vector3, type AnimationMixerEventMap, type Group, type Object3DEventMap, type Scene, type Vector3Like } from "three";
-import { GLTFLoader, type GLTF } from "three/addons";
+import { GLTFLoader, type GLTF } from "./threefix";
 
 class CrystalInstance {
     collected: boolean;

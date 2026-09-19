@@ -49,6 +49,7 @@ export const ScreenStick = ({onInput}: IScreenStickProps) => {
         }
 
         layerRef.current.onpointerdown = (e)=>{
+            //console.log('down', e.pointerId);
             e.preventDefault();
             if (pointerId != null){
                 return;
@@ -61,6 +62,8 @@ export const ScreenStick = ({onInput}: IScreenStickProps) => {
         }
 
         const handleMove = (e: PointerEvent)=>{
+            e.preventDefault();
+            //console.log('move', pointerId);
             if (pointerId == null || e.pointerId != pointerId){
                 return;
             }
@@ -70,6 +73,7 @@ export const ScreenStick = ({onInput}: IScreenStickProps) => {
         }
 
         const handleUp = (e: PointerEvent)=>{
+            //console.log('up', pointerId, e.pointerId);
             if (pointerId == null || e.pointerId != pointerId){
                 return;
             }
@@ -82,10 +86,12 @@ export const ScreenStick = ({onInput}: IScreenStickProps) => {
 
         window.addEventListener('pointermove', handleMove);
         window.addEventListener('pointerup', handleUp);
+        window.addEventListener('pointercancel', handleUp);
 
         return ()=>{
             window.removeEventListener('pointermove', handleMove);
             window.removeEventListener('pointerup', handleUp);
+            window.removeEventListener('pointercancel', handleUp);
         }
     }, []);
 
