@@ -1,6 +1,9 @@
 import { Body, Box, Vec3, type World } from "cannon-es";
 import { AmbientLight, AnimationAction, AnimationMixer, Color, DirectionalLight, LoopOnce, LoopRepeat, Material, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, Vector3, type AnimationMixerEventMap, type Group, type Object3DEventMap, type Scene, type Vector3Like } from "three";
 import { GLTFLoader, type GLTF } from "./threefix";
+import type { GameRenderer } from "./gameRenderer";
+import React from "react";
+import { ActionPoint } from "../ui/actionPoint";
 
 class SwitchInstance {
     loadedModel: Group<Object3DEventMap>;
@@ -13,7 +16,14 @@ class SwitchInstance {
     onAction: AnimationAction;
     offAction: AnimationAction;
 
-    constructor(scene: Scene, world: World, gltf: GLTF, position: Vector3Like, color: Vector3Like, onSwitch: (switched: boolean)=>void, onActionShow: (type: string, position: Vector3Like, pointHandler: ()=>void)=>void) {
+    static nextId = 0;
+    id: string;
+    context: GameRenderer;
+   
+    constructor(context: GameRenderer, gltf: GLTF, position: Vector3Like, onSwitch: (switched: boolean)=>void) {
+        this.context = context;
+        const {scene, world, setOverlays, camera, canvas} = context;
+        this.id = `${SwitchInstance.name}_${SwitchInstance.nextId++}`;
         this.loadedModel = gltf.scene.clone();
         /*this.loadedModel.traverse(it=>{
             if (it instanceof Mesh){
@@ -80,25 +90,46 @@ class SwitchInstance {
                 return;
             }
             this.inArea = true;
-            onActionShow('', position, ()=>{
+            /*onActionShow('', position, ()=>{
                 if (this.switched){
                     this.switchOff();
                 } else {
                     this.switchOn();
                 }
-            });
+            });*/
         });
         world.addEventListener('endContact', (e: any) => {
             if (!this.inArea) {
                 return;
             }
             this.inArea = false;
-            onActionShow('', null, null);
+            //onActionShow('', null, null);
         });
         world.addBody(boxBody);
         //scene.add(crystal);
         this.loadedModel.position.set(position.x, position.y, position.z);
         scene.add(this.loadedModel);
+    }
+
+    updateOverlay(pointWorld: Vector3Like, pointHandler: ()=>void){
+        const {setOverlays, camera, canvas} = this.context;
+        const point = pointWorld ? new Vector3(pointWorld.x, pointWorld.y, pointWorld.z).project(camera) : null;
+        const screenPoint = !point ? null : new Vector3(point.x, -point.y, point.z).multiply(new Vector3(0.5, 0.5, 1)).add(new Vector3(0.5, 0.5, 0)).multiply(new Vector3(canvas.clientWidth, canvas.clientHeight, 1));
+        if (screenPoint){
+            const element = React.createElement(ActionPoint, {key: this.id, point: screenPoint, onClick: pointHandler}); 
+            setOverlays(last=>{
+                return {
+                    ...last,
+                    [this.id]: element
+                }
+            });
+        } else {
+            setOverlays(last=>{
+                const next = {...last}
+                delete next[this.id];
+                return next;
+            })
+        }
     }
 
     switchOn(){
@@ -128,6 +159,17 @@ class SwitchInstance {
         if (this.animationMixer) {
             this.animationMixer.update(0.015);
         }
+        if (this.loadedModel && this.inArea){
+            this.updateOverlay(this.loadedModel.position, ()=>{
+                if (this.switched){
+                    this.switchOff();
+                } else {
+                    this.switchOn();
+                }
+            })
+        } else {
+            this.updateOverlay(null, null)
+        }
     }
 }
 
@@ -135,9 +177,8 @@ export class Switches {
     instances: SwitchInstance[];
     loaded: boolean;
     onSwitch: ()=>void;
-    onActionShow: (type: string, position: Vector3Like, pointHandler: ()=>void)=>void;
 
-    constructor(scene: Scene, world: World) {
+    constructor(context: GameRenderer) {
         const loader = new GLTFLoader();
         loader.load(
             './switch_ani.glb',
@@ -145,9 +186,7 @@ export class Switches {
                 console.log(gltf)
                 this.loaded = true;
                 this.instances = [
-                    new SwitchInstance(scene, world, gltf, {x: -2, y: 0.5, z: -2}, {x: 0.1, y: 0.9, z: 0.1}, ()=>{this.onSwitch()}, (type, position, pointHandler)=>{
-                        this.onActionShow(type, position, pointHandler);
-                    }),
+                    new SwitchInstance(context, gltf, {x: -2, y: 0.5, z: -2}, ()=>{this.onSwitch()}),
                 ]
             },
             (progress) => {

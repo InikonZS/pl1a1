@@ -1,8 +1,11 @@
 import { Body, Box, Vec3, type World } from "cannon-es";
-import { AmbientLight, DirectionalLight, type Group, type Scene, type Vector3Like } from "three";
+import { AmbientLight, DirectionalLight, Vector3, type Group, type Scene, type Vector3Like } from "three";
 import { GLTFLoader } from "./threefix";
 import { Crystal } from "./crystal";
 import { Switches } from "./switch";
+import type { GameRenderer } from "./gameRenderer";
+import { ActionPoint } from "../ui/actionPoint";
+import React, { type ReactElement } from "react";
 
 export class MainScene {
     loadedModel: Group;
@@ -10,8 +13,10 @@ export class MainScene {
     onCollect: (variant: 'red' | 'green' | 'blue')=>void;
     onActionShow: (type: string, position: Vector3Like, pointHandler: ()=>void)=>void;
     switches: Switches;
+    pointElement: ReactElement;
 
-    constructor(scene: Scene, world: World) {
+    constructor(context: GameRenderer) {
+        const {scene, world} = context;
         const loader = new GLTFLoader();
         loader.load(
             './brickwall3.glb', // Путь к файлу из папки public
@@ -37,8 +42,8 @@ export class MainScene {
                 });
                 world.addBody(boxBody);*/
                 //scene.add(crystal);
-                this.switches = new Switches(scene, world);
-                this.switches.onActionShow = (type, position, pointHandler)=>this.onActionShow(type, position, pointHandler);
+                this.switches = new Switches(context);
+                //this.switches.onActionShow = //this.onActionShow(type, position, pointHandler);
                 this.switches.onSwitch = () => {};
                 this.crystal = new Crystal(scene, world);
                 this.crystal.onCollect = (variant) => this.onCollect(variant);

@@ -4,6 +4,7 @@ import { Player } from './player';
 import type { IPointer } from '../ui/screenStick';
 import { World } from 'cannon-es';
 import { Material, type Object3DEventMap, PerspectiveCamera, type Mesh, type BoxGeometry, Timer, PCFShadowMap, Scene, WebGLRenderer, type Vector3Like } from 'three';
+import type { ReactElement } from 'react';
 
 export class GameRenderer {
     scene: Scene<Object3DEventMap>;
@@ -18,10 +19,14 @@ export class GameRenderer {
     clock: Timer;
     world: World;
     onCollect: (variant: 'red' | 'green' | 'blue')=>void;
-    onActionShow: (type: string, position: Vector3Like, pointHandler: ()=>void)=>void;
+    //onActionShow: (type: string, position: Vector3Like, pointHandler: ()=>void)=>void;
     onAnimate: ()=>void;
+    setOverlays: React.Dispatch<React.SetStateAction<Record<string, ReactElement>>>;
+    canvas: HTMLCanvasElement;
 
-    constructor(canvas: HTMLCanvasElement) {
+    constructor(canvas: HTMLCanvasElement, setOverlays:React.Dispatch<React.SetStateAction<Record<string, ReactElement>>>) {
+        this.setOverlays = setOverlays;
+        this.canvas = canvas;
         this.clock = new Timer();
         this.world = new World();
         this.world.gravity.set(0, -9.82, 0);
@@ -56,8 +61,8 @@ export class GameRenderer {
 
         window.addEventListener('resize', this.handleResize);
 
-        this.mainScene = new MainScene(this.scene, this.world);
-        this.mainScene.onActionShow = (type, position, pointHandler) => this.onActionShow(type, position, pointHandler);
+        this.mainScene = new MainScene(this);
+        //this.mainScene.onActionShow = (type, position, pointHandler) => this.onActionShow(type, position, pointHandler);
         this.mainScene.onCollect = (variant)=>this.onCollect(variant);
         this.player = new Player(this.scene, this.world);
 

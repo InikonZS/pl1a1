@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { type ReactElement, useEffect, useRef, useState } from 'react';
 import style from './application.module.css'
 import { GameRenderer } from '../scene/gameRenderer';
 import { ScreenStick } from './screenStick';
@@ -13,14 +13,13 @@ export const App = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [sceneRenderer, setSceneRenderer] = useState<GameRenderer>(null);
   const [inventory, setInventory] = useState<Array<string>>(new Array(5).fill(null));
-  const [point, setPoint] = useState<Vector3Like>(null);
-  const [pointHandler, setPointHandler] = useState<()=>void>(null);
+  const [overlays, setOverlays] = useState<Record<string, ReactElement>>({});
 
   useEffect(()=>{
     if (!canvasRef.current){
       return;
     }
-    const gameRenderer = new GameRenderer(canvasRef.current);
+    const gameRenderer = new GameRenderer(canvasRef.current, setOverlays);
     gameRenderer.onCollect = (variant)=>{
       setInventory(last=>{
         const index = last.indexOf(null);
@@ -35,15 +34,15 @@ export const App = () => {
     }
 
     let pointWorld: Vector3Like = null;
-    gameRenderer.onActionShow = (type, position, pointHandler)=>{
+    /*gameRenderer.onActionShow = (type, position, pointHandler)=>{
       pointWorld = position;
       setPointHandler(()=>pointHandler);
       console.log(pointHandler)
-    }
+    }*/
 
     gameRenderer.onAnimate = ()=>{
-      const point = pointWorld ? new Vector3(pointWorld.x, pointWorld.y, pointWorld.z).project(gameRenderer.camera) : null;
-      setPoint(!point ? null : new Vector3(point.x, -point.y, point.z).multiply(new Vector3(0.5, 0.5, 1)).add(new Vector3(0.5, 0.5, 0)).multiply(new Vector3(canvasRef.current.clientWidth, canvasRef.current.clientHeight, 1)));
+      //const point = pointWorld ? new Vector3(pointWorld.x, pointWorld.y, pointWorld.z).project(gameRenderer.camera) : null;
+      //setPoint(!point ? null : new Vector3(point.x, -point.y, point.z).multiply(new Vector3(0.5, 0.5, 1)).add(new Vector3(0.5, 0.5, 0)).multiply(new Vector3(canvasRef.current.clientWidth, canvasRef.current.clientHeight, 1)));
       //const point = new Vector3(4, 0.5, 5).project(gameRenderer.camera);
       
       
@@ -66,7 +65,8 @@ export const App = () => {
           }
           sceneRenderer.input(data);
         }}></ScreenStick>
-        {point && pointHandler && <ActionPoint point={point} onClick={()=>pointHandler()}></ActionPoint>}
+        {Object.values(overlays)}
+        {/* {point && pointHandler && <ActionPoint point={point} onClick={()=>pointHandler()}></ActionPoint>} */}
         {!isFinished && <GameScreen inventory={inventory}></GameScreen>}
         {isFinished && <PackshotScreen></PackshotScreen>}
       </div>
