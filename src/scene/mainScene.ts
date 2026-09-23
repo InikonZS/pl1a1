@@ -1,12 +1,15 @@
 import { Body, Box, Vec3, type World } from "cannon-es";
-import { AmbientLight, DirectionalLight, type Group, type Scene } from "three";
+import { AmbientLight, DirectionalLight, type Group, type Scene, type Vector3Like } from "three";
 import { GLTFLoader } from "./threefix";
 import { Crystal } from "./crystal";
+import { Switches } from "./switch";
 
 export class MainScene {
     loadedModel: Group;
     crystal: Crystal;
     onCollect: (variant: 'red' | 'green' | 'blue')=>void;
+    onActionShow: (type: string, position: Vector3Like, pointHandler: ()=>void)=>void;
+    switches: Switches;
 
     constructor(scene: Scene, world: World) {
         const loader = new GLTFLoader();
@@ -34,6 +37,9 @@ export class MainScene {
                 });
                 world.addBody(boxBody);*/
                 //scene.add(crystal);
+                this.switches = new Switches(scene, world);
+                this.switches.onActionShow = (type, position, pointHandler)=>this.onActionShow(type, position, pointHandler);
+                this.switches.onSwitch = () => {};
                 this.crystal = new Crystal(scene, world);
                 this.crystal.onCollect = (variant) => this.onCollect(variant);
                 scene.add(this.loadedModel);
@@ -57,7 +63,8 @@ export class MainScene {
 
     animate(){
         if (this.loadedModel) {
-            this.crystal.animate()
+            this.crystal.animate();
+            this.switches.animate();
             //this.loadedModel.rotation.y += 0.005; // Вращаем модель, когда она загрузилась
         }
     }

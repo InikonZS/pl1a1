@@ -3,7 +3,7 @@ import { MainScene } from './mainScene';
 import { Player } from './player';
 import type { IPointer } from '../ui/screenStick';
 import { World } from 'cannon-es';
-import { Material, type Object3DEventMap, PerspectiveCamera, type Mesh, type BoxGeometry, Timer, PCFShadowMap, Scene, WebGLRenderer } from 'three';
+import { Material, type Object3DEventMap, PerspectiveCamera, type Mesh, type BoxGeometry, Timer, PCFShadowMap, Scene, WebGLRenderer, type Vector3Like } from 'three';
 
 export class GameRenderer {
     scene: Scene<Object3DEventMap>;
@@ -18,6 +18,7 @@ export class GameRenderer {
     clock: Timer;
     world: World;
     onCollect: (variant: 'red' | 'green' | 'blue')=>void;
+    onActionShow: (type: string, position: Vector3Like, pointHandler: ()=>void)=>void;
     onAnimate: ()=>void;
 
     constructor(canvas: HTMLCanvasElement) {
@@ -56,6 +57,7 @@ export class GameRenderer {
         window.addEventListener('resize', this.handleResize);
 
         this.mainScene = new MainScene(this.scene, this.world);
+        this.mainScene.onActionShow = (type, position, pointHandler) => this.onActionShow(type, position, pointHandler);
         this.mainScene.onCollect = (variant)=>this.onCollect(variant);
         this.player = new Player(this.scene, this.world);
 

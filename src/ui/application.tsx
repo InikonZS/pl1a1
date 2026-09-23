@@ -4,7 +4,7 @@ import { GameRenderer } from '../scene/gameRenderer';
 import { ScreenStick } from './screenStick';
 import { GameScreen } from './gameScreen';
 import { PackshotScreen } from './packshot';
-import { Vector3 } from 'three';
+import { Vector3, type Vector3Like } from 'three';
 import { ActionPoint } from './actionPoint';
 
 export const App = () => {
@@ -13,7 +13,8 @@ export const App = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [sceneRenderer, setSceneRenderer] = useState<GameRenderer>(null);
   const [inventory, setInventory] = useState<Array<string>>(new Array(5).fill(null));
-  const [point, setPoint] = useState<Vector3>(null);
+  const [point, setPoint] = useState<Vector3Like>(null);
+  const [pointHandler, setPointHandler] = useState<()=>void>(null);
 
   useEffect(()=>{
     if (!canvasRef.current){
@@ -32,8 +33,19 @@ export const App = () => {
         return next;
       });
     }
+
+    let pointWorld: Vector3Like = null;
+    gameRenderer.onActionShow = (type, position, pointHandler)=>{
+      pointWorld = position;
+      setPointHandler(()=>pointHandler);
+      console.log(pointHandler)
+    }
+
     gameRenderer.onAnimate = ()=>{
-      const point = new Vector3(4, 0.5, 5).project(gameRenderer.camera);
+      const point = pointWorld ? new Vector3(pointWorld.x, pointWorld.y, pointWorld.z).project(gameRenderer.camera) : null;
+      setPoint(!point ? null : new Vector3(point.x, -point.y, point.z).multiply(new Vector3(0.5, 0.5, 1)).add(new Vector3(0.5, 0.5, 0)).multiply(new Vector3(canvasRef.current.clientWidth, canvasRef.current.clientHeight, 1)));
+      //const point = new Vector3(4, 0.5, 5).project(gameRenderer.camera);
+      
       
       //setPoint(new Vector3(point.x, -point.y, point.z).multiply(new Vector3(0.5, 0.5, 1)).add(new Vector3(0.5, 0.5, 0)).multiply(new Vector3(canvasRef.current.clientWidth, canvasRef.current.clientHeight, 1)));
     }
@@ -45,7 +57,7 @@ export const App = () => {
 
   const isFinished = inventory.filter(it=>it != null).length >=3;
 
-  return <div ref={appRef} className={style.app}>
+  return <div ref={appRef} className={style.app} onDragStart={(e)=>{e.preventDefault()}}>
       <canvas ref={canvasRef} width={1280} height={760} className={style.canvas}></canvas>
       <div ref={overlayRef} className={style.overlay}>
         <ScreenStick onInput={(data)=>{
@@ -54,7 +66,7 @@ export const App = () => {
           }
           sceneRenderer.input(data);
         }}></ScreenStick>
-        {point && <ActionPoint point={point}></ActionPoint>}
+        {point && pointHandler && <ActionPoint point={point} onClick={()=>pointHandler()}></ActionPoint>}
         {!isFinished && <GameScreen inventory={inventory}></GameScreen>}
         {isFinished && <PackshotScreen></PackshotScreen>}
       </div>
