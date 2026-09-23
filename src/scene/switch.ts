@@ -116,7 +116,7 @@ class SwitchInstance {
         const point = pointWorld ? new Vector3(pointWorld.x, pointWorld.y, pointWorld.z).project(camera) : null;
         const screenPoint = !point ? null : new Vector3(point.x, -point.y, point.z).multiply(new Vector3(0.5, 0.5, 1)).add(new Vector3(0.5, 0.5, 0)).multiply(new Vector3(canvas.clientWidth, canvas.clientHeight, 1));
         if (screenPoint){
-            const element = React.createElement(ActionPoint, {key: this.id, point: screenPoint, onClick: pointHandler}); 
+            const element = React.createElement(ActionPoint, {key: this.id, point: screenPoint, onClick: pointHandler, text: this.switched ? 'TURN OFF' : 'TURN ON'}); 
             setOverlays(last=>{
                 return {
                     ...last,
@@ -176,7 +176,7 @@ class SwitchInstance {
 export class Switches {
     instances: SwitchInstance[];
     loaded: boolean;
-    onSwitch: ()=>void;
+    onSwitch: (state: boolean)=>void;
 
     constructor(context: GameRenderer) {
         const loader = new GLTFLoader();
@@ -186,7 +186,7 @@ export class Switches {
                 console.log(gltf)
                 this.loaded = true;
                 this.instances = [
-                    new SwitchInstance(context, gltf, {x: -2, y: 0.5, z: -2}, ()=>{this.onSwitch()}),
+                    new SwitchInstance(context, gltf, {x: -2.87, y: 0.6, z: -4.83}, (on)=>{this.onSwitch(on)}),
                 ]
             },
             (progress) => {

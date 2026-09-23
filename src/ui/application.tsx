@@ -67,7 +67,7 @@ export const App = () => {
         }}></ScreenStick>
         {Object.values(overlays)}
         {/* {point && pointHandler && <ActionPoint point={point} onClick={()=>pointHandler()}></ActionPoint>} */}
-        {!isFinished && <GameScreen inventory={inventory}></GameScreen>}
+        {!isFinished && <GameScreen inventory={inventory} onPlayerChange={()=>sceneRenderer.setActivePlayer()}></GameScreen>}
         {isFinished && <PackshotScreen></PackshotScreen>}
       </div>
     </div>

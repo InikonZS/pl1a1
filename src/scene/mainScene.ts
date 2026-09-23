@@ -6,6 +6,7 @@ import { Switches } from "./switch";
 import type { GameRenderer } from "./gameRenderer";
 import { ActionPoint } from "../ui/actionPoint";
 import React, { type ReactElement } from "react";
+import { Lift } from "./lift";
 
 export class MainScene {
     loadedModel: Group;
@@ -14,6 +15,7 @@ export class MainScene {
     onActionShow: (type: string, position: Vector3Like, pointHandler: ()=>void)=>void;
     switches: Switches;
     pointElement: ReactElement;
+    lift: Lift;
 
     constructor(context: GameRenderer) {
         const {scene, world} = context;
@@ -24,7 +26,12 @@ export class MainScene {
                 this.loadedModel = gltf.scene;
                 this.loadedModel.castShadow = true;
                 this.loadedModel.receiveShadow = true;
-                this.loadedModel.traverse(it=>{it.castShadow = true; it.receiveShadow = true});
+                this.loadedModel.traverse(it=>{
+                    it.castShadow = true; it.receiveShadow = true;
+                    if (['switch_box', 'switch_handler'].includes(it.name)){
+                        it.visible = false;
+                    }
+                });
                 /*const crystal = this.loadedModel.getObjectByName('Cube013').clone();
                 console.log(crystal);
                 crystal.position.set(0, 0.5, 0);
@@ -43,8 +50,9 @@ export class MainScene {
                 world.addBody(boxBody);*/
                 //scene.add(crystal);
                 this.switches = new Switches(context);
+                this.lift = new Lift(context);
                 //this.switches.onActionShow = //this.onActionShow(type, position, pointHandler);
-                this.switches.onSwitch = () => {};
+                this.switches.onSwitch = (on) => {this.lift.instances[0].switch(on)};
                 this.crystal = new Crystal(scene, world);
                 this.crystal.onCollect = (variant) => this.onCollect(variant);
                 scene.add(this.loadedModel);
@@ -70,6 +78,7 @@ export class MainScene {
         if (this.loadedModel) {
             this.crystal.animate();
             this.switches.animate();
+            this.lift.animate();
             //this.loadedModel.rotation.y += 0.005; // Вращаем модель, когда она загрузилась
         }
     }

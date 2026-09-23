@@ -5,6 +5,7 @@ import type { IPointer } from '../ui/screenStick';
 import { World } from 'cannon-es';
 import { Material, type Object3DEventMap, PerspectiveCamera, type Mesh, type BoxGeometry, Timer, PCFShadowMap, Scene, WebGLRenderer, type Vector3Like } from 'three';
 import type { ReactElement } from 'react';
+import { Cat } from './cat';
 
 export class GameRenderer {
     scene: Scene<Object3DEventMap>;
@@ -23,6 +24,8 @@ export class GameRenderer {
     onAnimate: ()=>void;
     setOverlays: React.Dispatch<React.SetStateAction<Record<string, ReactElement>>>;
     canvas: HTMLCanvasElement;
+    cat: Cat;
+    activePlayer: Cat | Player;
 
     constructor(canvas: HTMLCanvasElement, setOverlays:React.Dispatch<React.SetStateAction<Record<string, ReactElement>>>) {
         this.setOverlays = setOverlays;
@@ -65,6 +68,8 @@ export class GameRenderer {
         //this.mainScene.onActionShow = (type, position, pointHandler) => this.onActionShow(type, position, pointHandler);
         this.mainScene.onCollect = (variant)=>this.onCollect(variant);
         this.player = new Player(this.scene, this.world);
+        this.cat = new Cat(this.scene, this.world);
+        this.setActivePlayer('player');
 
         this.animate(Date.now());
     }
@@ -86,19 +91,32 @@ export class GameRenderer {
         this.animationFrameId = requestAnimationFrame(this.animate);
         this.mainScene.animate();
         this.player.animate();
+        this.cat.animate();
         //console.log(this.world.bodies);
         if(this.player.loadedModel){
             const angle = -Math.PI / 10;
             this.camera.rotation.set(-Math.PI / 6, angle, 0 );
-            this.camera.position.set(this.player.loadedModel.position.x + Math.sin(angle) * 3, 2, this.player.loadedModel.position.z + Math.cos(angle) * 3);
+            this.camera.position.set(this.activePlayer.loadedModel.position.x + Math.sin(angle) * 3, 2, this.activePlayer.loadedModel.position.z + Math.cos(angle) * 3);
         }
         this.clock.update(timeStamp);
         this.world.step(1/60, delta, 3);
         this.onAnimate?.();
     }
 
+    setActivePlayer(name?: 'cat' | 'player'){
+        /*if (!this.activePlayer){
+            this.cat.boxBody.mass = 1000;
+            this.player.boxBody.mass = 1000;
+        } else {
+            this.activePlayer.boxBody.mass = 1000;
+        }*/
+        const nextPlayer = this.activePlayer == this.cat ? 'player' : 'cat';
+        this.activePlayer = {cat: this.cat, player: this.player}[name ?? nextPlayer];
+        //this.activePlayer.boxBody.mass = 1;
+    }
+
     input(data: IPointer){
-        this.player.input(data);
+        this.activePlayer.input(data);
     }
 
     destroy() {

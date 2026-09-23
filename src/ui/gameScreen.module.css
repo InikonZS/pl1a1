@@ -45,4 +45,12 @@
     border: 1px solid #ccc;
     background-color: #0007;
     position: relative;
+    pointer-events: all;
+}
+
+.inventoryItemCat{
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
