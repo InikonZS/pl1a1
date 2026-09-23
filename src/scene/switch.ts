@@ -86,6 +86,9 @@ class SwitchInstance {
             fixedRotation: true
         });
         boxBody.addEventListener('collide', (e: any) => {
+            if (e.body !== context.player.boxBody){
+                return;
+            }
             if (this.inArea) {
                 return;
             }
@@ -99,6 +102,10 @@ class SwitchInstance {
             });*/
         });
         world.addEventListener('endContact', (e: any) => {
+            
+            if (!([e.bodyA, e.bodyB].includes(context.player.boxBody) && [e.bodyA, e.bodyB].includes(boxBody) )){
+                return;
+            }
             if (!this.inArea) {
                 return;
             }
@@ -159,7 +166,7 @@ class SwitchInstance {
         if (this.animationMixer) {
             this.animationMixer.update(0.015);
         }
-        if (this.loadedModel && this.inArea){
+        if (this.loadedModel && this.inArea && this.context.activePlayer == this.context.player){
             this.updateOverlay(this.loadedModel.position, ()=>{
                 if (this.switched){
                     this.switchOff();
