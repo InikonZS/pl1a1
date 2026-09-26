@@ -3,7 +3,15 @@ import { AmbientLight, AnimationMixer, Color, DirectionalLight, LoopOnce, LoopRe
 import { GLTFLoader, type GLTF } from "./threefix";
 import type { GameRenderer } from "./gameRenderer";
 import { Easing, Tween } from "@tweenjs/tween.js";
-
+/*
+]e]]]]]
+]111--]
+]22---]
+]-----e
+]3----]
+]3----]
+]]]ee]]
+*/
 class LiftInstance {
     collected: boolean;
     loadedModel: Group<Object3DEventMap>;

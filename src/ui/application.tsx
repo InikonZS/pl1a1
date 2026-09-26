@@ -6,6 +6,7 @@ import { GameScreen } from './gameScreen';
 import { PackshotScreen } from './packshot';
 import { Vector3, type Vector3Like } from 'three';
 import { ActionPoint } from './actionPoint';
+import { BlockGame } from './blockGame';
 
 export const App = () => {
   const appRef = useRef<HTMLDivElement>(null);
@@ -69,6 +70,7 @@ export const App = () => {
         {/* {point && pointHandler && <ActionPoint point={point} onClick={()=>pointHandler()}></ActionPoint>} */}
         {!isFinished && <GameScreen inventory={inventory} onPlayerChange={()=>sceneRenderer.setActivePlayer()}></GameScreen>}
         {isFinished && <PackshotScreen></PackshotScreen>}
+        <BlockGame></BlockGame>
       </div>
     </div>
 }

@@ -1,0 +1,35 @@
+.blockGame{
+    position: relative;
+    background-color: #0009;
+    user-select: none;
+}
+
+.blockBg{
+    position: relative;
+    --blockColor: #fff;
+}
+
+.blocks{
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.blockContainer{
+    position: absolute;
+    --blockColor: #fff;
+}
+
+.blockPart{
+    position: absolute;
+    background-color: var(--blockColor);
+    width: 20px;
+    height: 20px;
+    border: 1px solid #000;
+}
+
+.blockOver{
+    border: 2px solid #000; 
+    border-radius: 100%;
+    transform: scale(0.5);
+}
