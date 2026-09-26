@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import style from "./blockGame.module.css";
 import { getFieldHash, getTargetHash, interateResursive } from "./blockGameTools";
 
@@ -10,9 +10,28 @@ interface IBlock {
 }
 
 const BlockPattern = ({pattern, className = '', onStartMove}: {pattern: Array<Array<string>>, className?: string , onStartMove?: (event: React.PointerEvent)=>void})=>{
+    const getNeibhorStyle = (x: number, y: number)=>{
+        const moves = [
+            {x: 1, y: 0},
+            {x: -1, y: 0},
+            {x: 0, y: 1},
+            {x: 0, y: -1},
+        ];
+        const neibhorStyles: string[] = [];
+        moves.forEach((move, i)=>{
+            if (pattern[y+move.y]?.[x+move.x] == '1'){
+                neibhorStyles.push(style[`blockPart_${['r','l','b','t'][i]}`]);
+            }
+        });
+        return neibhorStyles.join(' ');
+    }
+    
     return <>
         {
-            pattern.map((row, y)=>row.map((cell, x)=>(cell != '0') ? <div className={[style.blockPart, className].join(' ')} style={{left: `${x * 20}px`, top: `${y * 20}px`}} onPointerDown={(e)=>{
+            pattern.map((row, y)=>row.map((cell, x)=>(cell != '0') ? <div className={[style.blockPart, getNeibhorStyle(x, y), className].join(' ')}
+                //style={{left: `${x * 20}px`, top: `${y * 20}px`}} 
+                style={{left: `calc(var(--blockWidth) * ${x})`, top: `calc(var(--blockHeight) * ${y})`}} 
+                onPointerDown={(e)=>{
                 onStartMove?.(e);
             }}>
                 </div> : undefined
@@ -56,7 +75,7 @@ export const BlockGame = ()=>{
             id: '3'
         }
     ]);*/
-    const field = new Array(7).fill(null).map(it=>new Array(7).fill('1'));
+    const [field, setField] = useState( new Array(7).fill(null).map(it=>new Array(7).fill('1')));
     const [blocks, setBlocks] = useState<IBlock[]>([
         {
             position: { x: 0, y: 0 },
@@ -300,24 +319,49 @@ export const BlockGame = ()=>{
         }
     }, [moveStart]);
 
-    return <div className={style.blockGame}>
+    const fieldRef = useRef<HTMLDivElement>(null);
+    useEffect(()=>{
+        console.log('eff')
+        const resizeHandler = ()=>{
+            if (!fieldRef.current){
+                return;
+            }
+            const bounds = fieldRef.current.getBoundingClientRect();
+            //console.log((fieldRef.current.style.setProperty as any));
+            fieldRef.current.style.setProperty('--blockWidth', Math.min(bounds.width, bounds.height) / field[0].length + 'px');
+            fieldRef.current.style.setProperty('--blockHeight', Math.min(bounds.width, bounds.height)  / field.length + 'px');
+            //(fieldRef.current.style as any)['--blockHeight'] = bounds.height / field.length + 'px';
+        }
+        resizeHandler();
+        window.addEventListener('resize', resizeHandler);
+        return ()=>{
+            window.removeEventListener('resize', resizeHandler);
+        }
+    }, [field]);
+
+    return <div className={style.blockGameScreen}>
         { <button onClick={()=>{interateResursive({blocks, field})}}>generate</button> }
         { <button onClick={()=>{interateResursive({blocks, field}, getTargetHash({blocks, field}))}}>hint</button> }
-        <div className={style.blockGame}>
+        <div ref={fieldRef} className={style.blockGame} style={{'--blockWidth': `${100 / field[0].length}px`, '--blockHeight': `${100 / field.length}px`} as any}>
+        <div className={style.blockGameCenter} style={{width: `calc(var(--blockWidth) * ${field[0].length})`, height: `calc(var(--blockHeight) * ${field.length})`} as any}>
         <div className={style.blockBg}>
-            <BlockPattern pattern={field}></BlockPattern>
+            <BlockPattern pattern={field} className={style.blockGrid}></BlockPattern>
         </div>
         <div className={style.blocks}>
             {
                 blocks.map(block=>{
-                    return <div className={style.blockContainer} style={{'--blockColor': {1:'rgb(208, 62, 62)', 2: 'rgb(232, 232, 50)', 3: '#2a2', 4: '#27a'}[block.id], opacity: 0.25, pointerEvents: 'none', left: `${block.place.x * 20}px`, top: `${block.place.y * 20}px`} as any}>
+                    return <div className={style.blockContainer} style={{'--blockColor': {1:'rgb(208, 62, 62)', 2: 'rgb(232, 232, 50)', 3: '#2a2', 4: '#27a'}[block.id], opacity: 0.25, pointerEvents: 'none', 
+                        //left: `${block.place.x * 20}px`, top: `${block.place.y * 20}px`} as any}>
+                         left: `calc(var(--blockWidth) * ${block.place.x})`, top: `calc(var(--blockHeight) * ${block.place.y})`} as any}>
                         <BlockPattern pattern={block.pattern}></BlockPattern>
                     </div>
                 })
             }
             {
                 blocks.map(block=>{
-                    return <div className={style.blockContainer} style={{'--blockColor': {1:'rgb(208, 62, 62)', 2: 'rgb(232, 232, 50)', 3: '#2a2', 4: '#27a'}[block.id], left: `${block.position.x * 20}px`, top: `${block.position.y * 20}px`} as any}>
+                    return <div className={style.blockContainer} style={{'--blockColor': {1:'rgb(208, 62, 62)', 2: 'rgb(232, 232, 50)', 3: '#2a2', 4: '#27a'}[block.id], 
+                        //left: `${block.position.x * 20}px`, top: `${block.position.y * 20}px`} as any}>
+                         left: `calc(var(--blockWidth) * ${block.position.x})`, top: `calc(var(--blockHeight) * ${block.position.y})`} as any}>
                         <BlockPattern pattern={block.pattern} onStartMove={(e)=>{
                             setMoveStart({
                                 clientPosition: {x: e.clientX, y:e.clientY},
@@ -334,11 +378,15 @@ export const BlockGame = ()=>{
                         const targetCell = block.pattern[y + block.place.y - block.position.y]?.[x + block.place.x - block.position.x];
                         return (targetCell == '1' && cell == '1') ? '1': '0';
                     }));
-                    return <div className={style.blockContainer} style={{'--blockColor': {1:'rgb(254, 80, 80)', 2: 'rgb(255, 255, 89)', 3: 'rgb(63, 234, 63)', 4: 'rgb(46, 160, 231)'}[block.id], pointerEvents: 'none', left: `${block.place.x * 20}px`, top: `${block.place.y * 20}px`} as any}>
+                    return <div className={style.blockContainer} style={{'--blockColor': {1:'rgb(254, 80, 80)', 2: 'rgb(255, 255, 89)', 3: 'rgb(63, 234, 63)', 4: 'rgb(46, 160, 231)'}[block.id], pointerEvents: 'none',
+                        //left: `${block.place.x * 20}px`, top: `${block.place.y * 20}px`} as any}>
+                        left: `calc(var(--blockWidth) * ${block.place.x})`, top: `calc(var(--blockHeight) * ${block.place.y})`} as any}>
+        
                         <BlockPattern pattern={blockIntersection} className={style.blockOver}></BlockPattern>
                     </div>
                 })
             }
+        </div>
         </div>
     </div>
     </div>
