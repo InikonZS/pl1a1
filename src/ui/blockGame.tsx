@@ -50,6 +50,19 @@ export const BlockGame = ({ level, onExit}: { level: IField, onExit: ()=>void })
     const [field, setField] = useState<string[][]>(null);
     const [blocks, setBlocks] = useState<IBlock[]>(null);
     const [moveStack, setMoveStack] = useState<string[]>([]);
+    const [containerAnimated, setContainerAnimated] = useState<boolean>(true);
+
+    useEffect(()=>{
+        if (moveStart == null){
+            const timerId = setTimeout(()=>{
+                setContainerAnimated(true);
+            }, 250);
+            return ()=>{clearTimeout(timerId)}
+        } else {
+            setContainerAnimated(false);
+        }
+        
+    }, [moveStart]),
 
     useEffect(() => {
         setField(level.field.map(row => row.map(cell => cell)));
@@ -189,7 +202,7 @@ export const BlockGame = ({ level, onExit}: { level: IField, onExit: ()=>void })
                 <div className={style.blocks}>
                     {
                         blocks.map(block => {
-                            return <div className={style.blockContainer} style={{
+                            return <div className={[style.blockContainer, style.blockContainer_notrans].join(' ')} style={{
                                 '--blockColor': { 1: 'rgb(208, 62, 62)', 2: 'rgb(232, 232, 50)', 3: '#2a2', 4: '#27a' }[block.id], opacity: 0.25, pointerEvents: 'none',
                                 //left: `${block.place.x * 20}px`, top: `${block.place.y * 20}px`} as any}>
                                 left: `calc(var(--blockWidth) * ${block.place.x})`, top: `calc(var(--blockHeight) * ${block.place.y})`
@@ -200,7 +213,7 @@ export const BlockGame = ({ level, onExit}: { level: IField, onExit: ()=>void })
                     }
                     {
                         blocks.map(block => {
-                            return <div className={style.blockContainer} style={{
+                            return <div className={[style.blockContainer, containerAnimated && style.blockContainer_notrans].join(' ')} style={{
                                 '--blockColor': { 1: 'rgb(208, 62, 62)', 2: 'rgb(232, 232, 50)', 3: '#2a2', 4: '#27a' }[block.id],
                                 //left: `${block.position.x * 20}px`, top: `${block.position.y * 20}px`} as any}>
                                 left: `calc(var(--blockWidth) * ${block.position.x})`, top: `calc(var(--blockHeight) * ${block.position.y})`
@@ -221,7 +234,7 @@ export const BlockGame = ({ level, onExit}: { level: IField, onExit: ()=>void })
                                 const targetCell = block.pattern[y + block.place.y - block.position.y]?.[x + block.place.x - block.position.x];
                                 return (targetCell == '1' && cell == '1') ? '1' : '0';
                             }));
-                            return <div className={style.blockContainer} style={{
+                            return <div className={[style.blockContainer, style.blockContainer_notrans].join(' ')} style={{
                                 '--blockColor': { 1: 'rgb(254, 80, 80)', 2: 'rgb(255, 255, 89)', 3: 'rgb(63, 234, 63)', 4: 'rgb(46, 160, 231)' }[block.id], pointerEvents: 'none',
                                 //left: `${block.place.x * 20}px`, top: `${block.place.y * 20}px`} as any}>
                                 left: `calc(var(--blockWidth) * ${block.place.x})`, top: `calc(var(--blockHeight) * ${block.place.y})`
