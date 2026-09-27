@@ -1,0 +1,57 @@
+.background{
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: linear-gradient(0deg, #000 40%, #06f3 48%, #06f6 50%, #06f3 60%, #000 100%);
+}
+
+.backgroundItem{
+    width: 100%;
+    height: 100%;
+    background-color: #f03;
+    border-radius: 3px;
+    will-change: transform;
+    animation: item_ani infinite 4s cubic-bezier(0.21, 0, 0.75, 1);
+    border: 1px solid #fff5;
+}
+
+.backgroundItemWrap{
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    left: 50%;
+    bottom: 0px;
+    /* animation: item_ani infinite 4s linear; */
+}
+
+
+.backgroundMirror{
+    transform: scale(1, -1);
+    width: 100%;
+    height: 100%;
+    position: relative;
+    top: 0;
+    left: 0;
+    mask-image: linear-gradient(0deg, #06f 0%, #06f3 30%, #0001 100%);
+    /* mask-image: linear-gradient(0deg, #0003 40%, #06f 48%, #06f 50%, #06f3 80%, #0001 100%); */
+}
+
+.backgroundDirect{
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+@keyframes item_ani{
+    0%{
+        transform: translate(0px, 0px) rotate(0deg);
+    }
+    50%{
+        transform: translate(0px, -100px) rotate(180deg);
+    }
+    100%{
+        transform: translate(0px, 0px) rotate(360deg);
+    }
+}

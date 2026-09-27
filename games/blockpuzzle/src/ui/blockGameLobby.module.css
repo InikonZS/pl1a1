@@ -1,3 +1,14 @@
+.blockGameLobbyScreen{
+    position: relative;
+    user-select: none;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .blockGameLobby{
     position: relative;
     user-select: none;
@@ -11,7 +22,21 @@
 
 .levelList{
     display: flex;
+    flex-direction: column;
     gap: 10px;
+    padding: 20px;
+    background-color: #000c;
+    border-radius: 20px;
+    border: 1px solid #ccf6;
+}
+
+.levelListLevels{
+    display: flex;
+    gap: 10px;
+}
+
+.levelListHead{
+    color: #fff;
 }
 
 .levelButton{
@@ -23,4 +48,44 @@
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.blockGameLogo{
+    padding: 10px;
+    padding-top: 20pxa;
+}
+
+.blockGameLogoSlip{
+    color: #ff0;
+    text-shadow: -1px 0 3px #c0a000, 0 0 3px #c0a000, 0 0 3px #c0a000, 0 0 3px #c0a000, 0 0 3px #c0a000, 0 0 3px #c0a000, 0 0 10px #000,0 0 20px #000, 0 0 30px #000;
+    font-size: 42px;
+    line-height: 42px;
+}
+.blockGameLogoArrow{
+    background: #65c228;
+    height: 6px;
+    width: 82px;
+    border-radius: 2px;
+    border: 2px solid #fff;
+    margin-bottom: 5px;
+    position: relative;
+}
+.blockGameLogoArrowEnd{
+    background: #65c228;
+    height: 20px;
+    width: 20px;
+    border-radius: 2px;
+    border: 2px solid #fff;
+    margin-bottom: 5px;
+    position: relative;
+    left: calc(100% + 8px);
+    transform: rotate(45deg);
+    top: -19px;
+}
+.blockGameLogoTiles{
+    color: #f30;
+    font-weight: 600;
+    font-size: 32px;
+    line-height: 32px;
+    text-shadow: -1px 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff, 0 0 10px #000,0 0 20px #000, 0 0 30px #000;
 }

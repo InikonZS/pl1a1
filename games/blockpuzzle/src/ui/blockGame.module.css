@@ -1,6 +1,6 @@
 .blockGame{
     position: relative;
-    background-color: #0009;
+    /* background-color: #0009; */
     user-select: none;
     height: 100%;
     width: 100%;
@@ -13,29 +13,41 @@
 
 .blockGameCenter{
     position: relative;
-    background-color: #0009;
+    /* background-color: #0009; */
     user-select: none;
     height: 100%;
     width: 100%;
     overflow: hidden;
+    box-shadow: 0px 0px 40px #09f7, 0px 0px 60px #000, 0px 0px 60px #000;
+    border-radius: calc(var(--blockWidth) / 5);
 }
 
 .blockGameScreen{
     position: relative;
-    background-color: #0009;
+    background-color: #0000;
     user-select: none;
     height: 100%;
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
+    animation: fade-in forwards 1000ms;
+}
+
+@keyframes fade-in{
+    0%{
+        background-color: #0000;
+    }
+    100%{
+        background-color: #000a;
+    }
 }
 
 
 .blockBg{
     position: relative;
-    --blockColor: #fff;
-    border-radius: 3px;
+    --blockColor: #ccc /*#fff*/;
+    border-radius: calc(var(--blockWidth) / 5);
 }
 
 .blocks{
@@ -62,7 +74,11 @@
     width: var(--blockWidth);
     height: var(--blockHeight);
     border: 1px solid #0005;
-    border-radius: 3px;
+    border-radius: calc(var(--blockWidth) / 5);
+}
+
+.blockPlace{
+    border: 3px dashed var(--blockColor);
 }
 
 .blockPart_r{
@@ -104,6 +120,9 @@
     display: flex;
     justify-content: space-between;
     gap: 5px;
+    padding: 10px;
+    width: 100%;
+    align-items: center;
 }
 
 .blockGameExit{

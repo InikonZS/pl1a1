@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import style from "./blockGame.module.css";
 import { applyHash, getFieldHash, getTargetHash, interateResursive, type IField } from "./blockGameTools";
+import { WinScreen } from "./winScreen";
 
 interface IBlock {
     position: { x: number, y: number },
@@ -40,7 +41,7 @@ const BlockPattern = ({ pattern, className = '', onStartMove }: { pattern: Array
     </>
 }
 
-export const BlockGame = ({ level, onExit}: { level: IField, onExit: ()=>void }) => {
+export const BlockGame = ({ level, onExit, onNext}: { level: IField, onExit: ()=>void, onNext: ()=>void }) => {
     const [moveStart, setMoveStart] = useState<{
         clientPosition: { x: number, y: number },
         pointerId: number,
@@ -207,7 +208,7 @@ export const BlockGame = ({ level, onExit}: { level: IField, onExit: ()=>void })
                                 //left: `${block.place.x * 20}px`, top: `${block.place.y * 20}px`} as any}>
                                 left: `calc(var(--blockWidth) * ${block.place.x})`, top: `calc(var(--blockHeight) * ${block.place.y})`
                             } as any}>
-                                <BlockPattern pattern={block.pattern}></BlockPattern>
+                                <BlockPattern pattern={block.pattern} className={style.blockPlace}></BlockPattern>
                             </div>
                         })
                     }
@@ -246,7 +247,7 @@ export const BlockGame = ({ level, onExit}: { level: IField, onExit: ()=>void })
                     }
                 </div>
             </div>
-           {blocks.every(it=>{return it.position.x == it.place.x && it.position.y == it.place.y}) && <div className={style.win}>Win</div>} 
+           {blocks.every(it=>{return it.position.x == it.place.x && it.position.y == it.place.y}) && <WinScreen onNext={onNext}></WinScreen>}{/*<div className={style.win}>Win</div>*/} 
         </div>
         }
     </div>
