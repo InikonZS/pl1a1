@@ -1,11 +1,11 @@
-interface IBlock {
+export interface IBlock {
     position: { x: number, y: number },
     place: { x: number, y: number },
     pattern: Array<Array<string>>,
     id: string;
 }
 
-interface IField {
+export interface IField {
     blocks: IBlock[],
     field: string[][]
 }
@@ -30,6 +30,19 @@ export const getTargetHash = (field: IField) => {
         linear.push(it.place.x, it.place.y);
     });
     return linear.join('_');
+}
+
+export const applyHash = (field: IField, hash: string) => {
+    const splitedHash = hash.split('_').map(it=>Number(it));
+    const nextBlocks = field.blocks.map((block, i) => {
+        if ((i + 1).toString() != block.id){
+            console.log('id verify failed')
+        }
+        return {...block, position: {x: splitedHash[i*2], y: splitedHash[i*2+1]}}
+    });
+
+    const nextField = { ...field, blocks: nextBlocks };
+    return nextField;
 }
 
 const blockMove = (field: IField, selected: IBlock, moveDirection: { x: number, y: number }) => {
