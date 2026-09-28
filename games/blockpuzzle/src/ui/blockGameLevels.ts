@@ -1,3 +1,4 @@
+import { levelsHard } from "./blockGameLevelsHard";
 import type { IField } from "./blockGameTools";
 
 export const levels: IField[] = [
@@ -37,6 +38,7 @@ export const levels: IField[] = [
             },
         ]
     },
+    levelsHard[0],
 
        {
         field: new Array(5).fill(null).map(it => new Array(5).fill('1')),
@@ -69,6 +71,7 @@ export const levels: IField[] = [
             }
         ]
     },
+    levelsHard[1],
 
 
     {

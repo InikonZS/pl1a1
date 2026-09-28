@@ -313,8 +313,10 @@ export const BlockGame = ({ level, onExit, onNext }: { level: IField, onExit: ()
                 return;
             }
             const bounds = fieldRef.current.getBoundingClientRect();
-            fieldRef.current.style.setProperty('--blockWidth', Math.min(Math.min(bounds.width, bounds.height) / field[0].length, 50) + 'px');
-            fieldRef.current.style.setProperty('--blockHeight', Math.min(Math.min(bounds.width, bounds.height) / field.length, 50) + 'px');
+            const minW = Math.min(Math.min(bounds.width) / field[0].length, 50);
+            const minH = Math.min(Math.min(bounds.height) / field.length, 50);
+            fieldRef.current.style.setProperty('--blockWidth', Math.min(minH, minW) + 'px');
+            fieldRef.current.style.setProperty('--blockHeight',  Math.min(minH, minW) + 'px');
         }
         resizeHandler();
         window.addEventListener('resize', resizeHandler);
