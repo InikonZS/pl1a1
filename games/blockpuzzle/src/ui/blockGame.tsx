@@ -52,6 +52,7 @@ export const BlockGame = ({ level, onExit, onNext}: { level: IField, onExit: ()=
     const [blocks, setBlocks] = useState<IBlock[]>(null);
     const [moveStack, setMoveStack] = useState<string[]>([]);
     const [containerAnimated, setContainerAnimated] = useState<boolean>(true);
+    const [moveDirection, setMoveDirection] = useState({x:0, y:0});
 
     useEffect(()=>{
         if (moveStart == null){
@@ -66,6 +67,7 @@ export const BlockGame = ({ level, onExit, onNext}: { level: IField, onExit: ()=
     }, [moveStart]),
 
     useEffect(() => {
+        setMoveStack([]);
         setField(level.field.map(row => row.map(cell => cell)));
         setBlocks(level.blocks.map(block => ({ ...block, position: { ...block.position } })));
     }, [level]);
@@ -92,6 +94,7 @@ export const BlockGame = ({ level, onExit, onNext}: { level: IField, onExit: ()=
                     moveDirection.y = Math.sign(offset.y);
                 }
             }
+            setMoveDirection(moveDirection);
             if (moveDirection.x == 0 && moveDirection.y == 0) {
                 return;
             }
@@ -133,6 +136,10 @@ export const BlockGame = ({ level, onExit, onNext}: { level: IField, onExit: ()=
         }
 
         const upHandler = (e: PointerEvent) => {
+            if (e.pointerId != moveStart.pointerId) {
+                return;
+            }
+            setMoveStart(null);
             if (!moveResult) {
                 return;
             }
@@ -143,7 +150,6 @@ export const BlockGame = ({ level, onExit, onNext}: { level: IField, onExit: ()=
                 next[selectedBlockIndex] = { ...moveStart.block, position: { x: moveStart.block.position.x + moveResult.x, y: moveStart.block.position.y + moveResult.y } }
                 return next;
             });
-            setMoveStart(null);
         }
 
         window.addEventListener('pointermove', moveHandler);
@@ -220,12 +226,22 @@ export const BlockGame = ({ level, onExit, onNext}: { level: IField, onExit: ()=
                                 left: `calc(var(--blockWidth) * ${block.position.x})`, top: `calc(var(--blockHeight) * ${block.position.y})`
                             } as any}>
                                 <BlockPattern pattern={block.pattern} onStartMove={(e) => {
+                                    setMoveDirection({x: 0, y: 0});
                                     setMoveStart({
                                         clientPosition: { x: e.clientX, y: e.clientY },
                                         pointerId: e.pointerId,
                                         block: block
                                     });
                                 }}></BlockPattern>
+                                {moveStart && moveStart.block.id == block.id && <div className={style.arrows}>
+                                    <div className={[style.arrow, 
+                                        (moveDirection.x == 0 && moveDirection.y == 0) && style.arrow_n,
+                                        (moveDirection.x == -1 && moveDirection.y == 0) && style.arrow_l,
+                                        (moveDirection.x == 1 && moveDirection.y == 0) && style.arrow_r,
+                                        (moveDirection.x == 0 && moveDirection.y == 1) && style.arrow_b, 
+                                        (moveDirection.x == 0 && moveDirection.y == -1) && style.arrow_t
+                                    ].join(' ')}><div className={style.arrowInner}></div></div>
+                                </div>}
                             </div>
                         })
                     }

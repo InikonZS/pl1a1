@@ -28,11 +28,13 @@
     background-color: #000c;
     border-radius: 20px;
     border: 1px solid #ccf6;
+    max-width: 332px;
 }
 
 .levelListLevels{
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .levelListHead{
