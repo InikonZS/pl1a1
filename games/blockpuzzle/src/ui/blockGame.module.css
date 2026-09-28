@@ -78,7 +78,7 @@
 }
 
 .blockPlace{
-    border: 3px dashed var(--blockColor);
+    border: 3px dashed var(--blockStrokeColor);
 }
 
 .blockPart_r{

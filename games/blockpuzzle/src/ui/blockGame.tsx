@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import style from "./blockGame.module.css";
-import { applyHash, getFieldHash, getTargetHash, interateResursive, type IField } from "./blockGameTools";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { applyHash, getFieldHash, type IField } from "./blockGameTools";
 import { WinScreen } from "./winScreen";
+import style from "./blockGame.module.css";
 
 interface IBlock {
     position: { x: number, y: number },
@@ -29,48 +29,191 @@ const BlockPattern = ({ pattern, className = '', onStartMove }: { pattern: Array
 
     return <>
         {
-            pattern.map((row, y) => row.map((cell, x) => (cell != '0') ? <div className={[style.blockPart, getNeibhorStyle(x, y), className].join(' ')}
-                //style={{left: `${x * 20}px`, top: `${y * 20}px`}} 
-                style={{ left: `calc(var(--blockWidth) * ${x})`, top: `calc(var(--blockHeight) * ${y})` }}
-                onPointerDown={(e) => {
-                    onStartMove?.(e);
-                }}>
-            </div> : undefined
+            pattern.map((row, y) => row.map((cell, x) => (cell != '0') ?
+                <div className={[style.blockPart, getNeibhorStyle(x, y), className].join(' ')}
+                    style={{
+                        left: `calc(var(--blockWidth) * ${x})`,
+                        top: `calc(var(--blockHeight) * ${y})`
+                    }}
+                    onPointerDown={(e) => {
+                        onStartMove?.(e);
+                    }}>
+                </div> : undefined
             ))
         }
     </>
 }
 
-export const BlockGame = ({ level, onExit, onNext}: { level: IField, onExit: ()=>void, onNext: ()=>void }) => {
-    const [moveStart, setMoveStart] = useState<{
-        clientPosition: { x: number, y: number },
-        pointerId: number,
-        block: IBlock
-    }>(null);
+const BlockPlacesLayer = ({ blocks }: { blocks: IBlock[] }) => {
+    const colors = useMemo(() => {
+        return {
+            fill: {
+                '1': 'rgba(208, 62, 62, 0.2)',
+                '2': 'rgba(232, 232, 50, 0.2)',
+                '3': 'rgba(34, 170, 34, 0.2)',
+                '4': 'rgba(34, 119, 170, 0.2)'
+            },
+            stroke:
+            {
+                '1': 'rgba(208, 62, 62, 0.7)',
+                '2': 'rgba(232, 232, 50, 0.7)',
+                '3': 'rgba(34, 170, 34, 0.7)',
+                '4': 'rgba(34, 119, 170, 0.7)'
+            },
+        }
+    }, []);
+
+    return <div>
+        {
+            blocks.map(block => {
+                return <div key={block.id}
+                    className={[style.blockContainer, style.blockContainer_notrans].join(' ')}
+                    style={{
+                        '--blockColor': colors.fill[block.id as keyof typeof colors.fill],
+                        '--blockStrokeColor': colors.stroke[block.id as keyof typeof colors.stroke],
+                        pointerEvents: 'none',
+                        left: `calc(var(--blockWidth) * ${block.place.x})`,
+                        top: `calc(var(--blockHeight) * ${block.place.y})`
+                    } as any}
+                >
+                    <BlockPattern pattern={block.pattern} className={style.blockPlace}></BlockPattern>
+                </div>
+            })
+        }
+    </div>
+}
+
+interface IBlockInteractiveLayerProps {
+    blocks: IBlock[],
+    containerAnimated: boolean,
+    moveStart: IMoveStart,
+    moveDirection: { x: number, y: number },
+    onStartMove: (data: IMoveStart) => void;
+}
+const BlockInteractiveLayer = ({ blocks, containerAnimated, moveStart, moveDirection, onStartMove }: IBlockInteractiveLayerProps) => {
+    const colors = useMemo(() => {
+        return {
+            fill: {
+                '1': 'rgba(208, 62, 62, 1)',
+                '2': 'rgba(232, 232, 50, 1)',
+                '3': 'rgba(34, 170, 34, 1)',
+                '4': 'rgba(34, 119, 170, 1)'
+            },
+            stroke:
+            {
+                '1': 'rgba(208, 62, 62, 1)',
+                '2': 'rgba(232, 232, 50, 1)',
+                '3': 'rgba(34, 170, 34, 1)',
+                '4': 'rgba(34, 119, 170, 1)'
+            },
+        }
+    }, []);
+
+    return <div>
+        {blocks.map(block => {
+            return <div className={[style.blockContainer, containerAnimated && style.blockContainer_notrans].join(' ')}
+                style={{
+                    '--blockColor': colors.fill[block.id as keyof typeof colors.fill],
+                    '--blockStrokeColor': colors.stroke[block.id as keyof typeof colors.stroke],
+                    left: `calc(var(--blockWidth) * ${block.position.x})`,
+                    top: `calc(var(--blockHeight) * ${block.position.y})`
+                } as any}>
+                <BlockPattern pattern={block.pattern} onStartMove={(e) => {
+                    onStartMove({
+                        clientPosition: { x: e.clientX, y: e.clientY },
+                        pointerId: e.pointerId,
+                        block: block
+                    });
+                }}></BlockPattern>
+                {moveStart && moveStart.block.id == block.id && <div className={style.arrows}>
+                    <div className={[style.arrow,
+                    (moveDirection.x == 0 && moveDirection.y == 0) && style.arrow_n,
+                    (moveDirection.x == -1 && moveDirection.y == 0) && style.arrow_l,
+                    (moveDirection.x == 1 && moveDirection.y == 0) && style.arrow_r,
+                    (moveDirection.x == 0 && moveDirection.y == 1) && style.arrow_b,
+                    (moveDirection.x == 0 && moveDirection.y == -1) && style.arrow_t
+                    ].join(' ')}><div className={style.arrowInner}></div></div>
+                </div>}
+            </div>
+        })
+        }
+    </div>
+}
+
+const BlockOverLayer = ({ blocks }: { blocks: IBlock[] }) => {
+    const colors = useMemo(() => {
+        return {
+            fill: {
+                '1': 'rgba(254, 80, 80, 1)',
+                '2': 'rgba(255, 255, 89, 1)',
+                '3': 'rgba(63, 234, 63, 1)',
+                '4': 'rgba(46, 160, 231, 1)'
+            },
+            stroke:
+            {
+                '1': 'rgba(208, 62, 62, 0.7)',
+                '2': 'rgba(232, 232, 50, 0.7)',
+                '3': 'rgba(34, 170, 34, 0.7)',
+                '4': 'rgba(34, 119, 170, 0.7)'
+            },
+        }
+    }, []);
+
+    return <div>
+        {
+            blocks.map(block => {
+                const blockIntersection = block.pattern.map((row, y) => row.map((cell, x) => {
+                    const targetCell = block.pattern[y + block.place.y - block.position.y]?.[x + block.place.x - block.position.x];
+                    return (targetCell == '1' && cell == '1') ? '1' : '0';
+                }));
+                return <div className={[style.blockContainer, style.blockContainer_notrans].join(' ')}
+                    style={{
+                        '--blockColor': colors.fill[block.id as keyof typeof colors.fill],
+                        '--blockStrokeColor': colors.stroke[block.id as keyof typeof colors.stroke],
+                        pointerEvents: 'none',
+                        left: `calc(var(--blockWidth) * ${block.place.x})`,
+                        top: `calc(var(--blockHeight) * ${block.place.y})`
+                    } as any}
+                >
+                    <BlockPattern pattern={blockIntersection} className={style.blockOver}></BlockPattern>
+                </div>
+            })
+        }
+    </div>
+}
+
+interface IMoveStart {
+    clientPosition: { x: number, y: number },
+    pointerId: number,
+    block: IBlock
+}
+
+export const BlockGame = ({ level, onExit, onNext }: { level: IField, onExit: () => void, onNext: () => void }) => {
+    const [moveStart, setMoveStart] = useState<IMoveStart>(null);
 
     const [field, setField] = useState<string[][]>(null);
     const [blocks, setBlocks] = useState<IBlock[]>(null);
     const [moveStack, setMoveStack] = useState<string[]>([]);
     const [containerAnimated, setContainerAnimated] = useState<boolean>(true);
-    const [moveDirection, setMoveDirection] = useState({x:0, y:0});
+    const [moveDirection, setMoveDirection] = useState({ x: 0, y: 0 });
 
-    useEffect(()=>{
-        if (moveStart == null){
-            const timerId = setTimeout(()=>{
+    useEffect(() => {
+        if (moveStart == null) {
+            const timerId = setTimeout(() => {
                 setContainerAnimated(true);
             }, 250);
-            return ()=>{clearTimeout(timerId)}
+            return () => { clearTimeout(timerId) }
         } else {
             setContainerAnimated(false);
         }
-        
+
     }, [moveStart]),
 
-    useEffect(() => {
-        setMoveStack([]);
-        setField(level.field.map(row => row.map(cell => cell)));
-        setBlocks(level.blocks.map(block => ({ ...block, position: { ...block.position } })));
-    }, [level]);
+        useEffect(() => {
+            setMoveStack([]);
+            setField(level.field.map(row => row.map(cell => cell)));
+            setBlocks(level.blocks.map(block => ({ ...block, position: { ...block.position } })));
+        }, [level]);
 
     useEffect(() => {
         if (!moveStart) {
@@ -143,7 +286,7 @@ export const BlockGame = ({ level, onExit, onNext}: { level: IField, onExit: ()=
             if (!moveResult) {
                 return;
             }
-            setMoveStack(last=>[...last, getFieldHash({field, blocks})]);
+            setMoveStack(last => [...last, getFieldHash({ field, blocks })]);
             setBlocks((last) => {
                 const next = [...last];
                 const selectedBlockIndex = next.findIndex(it => it.id == moveStart.block.id);
@@ -165,16 +308,13 @@ export const BlockGame = ({ level, onExit, onNext}: { level: IField, onExit: ()=
 
     const fieldRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
-        console.log('eff')
         const resizeHandler = () => {
             if (!fieldRef.current) {
                 return;
             }
             const bounds = fieldRef.current.getBoundingClientRect();
-            //console.log((fieldRef.current.style.setProperty as any));
             fieldRef.current.style.setProperty('--blockWidth', Math.min(Math.min(bounds.width, bounds.height) / field[0].length, 50) + 'px');
             fieldRef.current.style.setProperty('--blockHeight', Math.min(Math.min(bounds.width, bounds.height) / field.length, 50) + 'px');
-            //(fieldRef.current.style as any)['--blockHeight'] = bounds.height / field.length + 'px';
         }
         resizeHandler();
         window.addEventListener('resize', resizeHandler);
@@ -187,83 +327,55 @@ export const BlockGame = ({ level, onExit, onNext}: { level: IField, onExit: ()=
 
     return <div className={style.blockGameScreen}>
         <div className={style.blockGameTop}>
-            <div className={style.blockGameExit} onClick={()=>{onExit()}}>Menu</div>
+            <div className={style.blockGameExit} onClick={() => { onExit() }}>Menu</div>
             <div className={style.blockGameMoves}>Moves: {moveStack.length}</div>
-            <div className={style.blockGameBack} onClick={()=>{
-                if (!lastHash){
+            <div className={style.blockGameBack} onClick={() => {
+                if (!lastHash) {
                     return;
                 }
-                setMoveStack(last=>last.slice(0, last.length-1))
-                setBlocks(last=>{
-                    return applyHash({field, blocks: last}, lastHash).blocks;
+                setMoveStack(last => last.slice(0, last.length - 1))
+                setBlocks(last => {
+                    return applyHash({ field, blocks: last }, lastHash).blocks;
                 })
             }}>Undo</div>
             {/* {<button onClick={() => { interateResursive({ blocks, field }) }}>generate</button>} 
             {<button onClick={() => { interateResursive({ blocks, field }, getTargetHash({ blocks, field })) }}>hint</button>}  */}
         </div>
-        {(field && blocks ) && <div ref={fieldRef} className={style.blockGame} style={{ '--blockWidth': `${100 / field[0].length}px`, '--blockHeight': `${100 / field.length}px` } as any}>
-            <div className={style.blockGameCenter} style={{ width: `calc(var(--blockWidth) * ${field[0].length})`, height: `calc(var(--blockHeight) * ${field.length})` } as any}>
+        {(field && blocks) && <div
+            ref={fieldRef}
+            className={style.blockGame}
+            style={{
+                '--blockWidth': `${100 / field[0].length}px`,
+                '--blockHeight': `${100 / field.length}px`
+            } as any}
+        >
+            <div
+                className={style.blockGameCenter}
+                style={{
+                    width: `calc(var(--blockWidth) * ${field[0].length})`,
+                    height: `calc(var(--blockHeight) * ${field.length})`
+                } as any}
+            >
                 <div className={style.blockBg}>
                     <BlockPattern pattern={field} className={style.blockGrid}></BlockPattern>
                 </div>
                 <div className={style.blocks}>
-                    {
-                        blocks.map(block => {
-                            return <div className={[style.blockContainer, style.blockContainer_notrans].join(' ')} style={{
-                                '--blockColor': { 1: 'rgb(208, 62, 62)', 2: 'rgb(232, 232, 50)', 3: '#2a2', 4: '#27a' }[block.id], opacity: 0.25, pointerEvents: 'none',
-                                //left: `${block.place.x * 20}px`, top: `${block.place.y * 20}px`} as any}>
-                                left: `calc(var(--blockWidth) * ${block.place.x})`, top: `calc(var(--blockHeight) * ${block.place.y})`
-                            } as any}>
-                                <BlockPattern pattern={block.pattern} className={style.blockPlace}></BlockPattern>
-                            </div>
-                        })
-                    }
-                    {
-                        blocks.map(block => {
-                            return <div className={[style.blockContainer, containerAnimated && style.blockContainer_notrans].join(' ')} style={{
-                                '--blockColor': { 1: 'rgb(208, 62, 62)', 2: 'rgb(232, 232, 50)', 3: '#2a2', 4: '#27a' }[block.id],
-                                //left: `${block.position.x * 20}px`, top: `${block.position.y * 20}px`} as any}>
-                                left: `calc(var(--blockWidth) * ${block.position.x})`, top: `calc(var(--blockHeight) * ${block.position.y})`
-                            } as any}>
-                                <BlockPattern pattern={block.pattern} onStartMove={(e) => {
-                                    setMoveDirection({x: 0, y: 0});
-                                    setMoveStart({
-                                        clientPosition: { x: e.clientX, y: e.clientY },
-                                        pointerId: e.pointerId,
-                                        block: block
-                                    });
-                                }}></BlockPattern>
-                                {moveStart && moveStart.block.id == block.id && <div className={style.arrows}>
-                                    <div className={[style.arrow, 
-                                        (moveDirection.x == 0 && moveDirection.y == 0) && style.arrow_n,
-                                        (moveDirection.x == -1 && moveDirection.y == 0) && style.arrow_l,
-                                        (moveDirection.x == 1 && moveDirection.y == 0) && style.arrow_r,
-                                        (moveDirection.x == 0 && moveDirection.y == 1) && style.arrow_b, 
-                                        (moveDirection.x == 0 && moveDirection.y == -1) && style.arrow_t
-                                    ].join(' ')}><div className={style.arrowInner}></div></div>
-                                </div>}
-                            </div>
-                        })
-                    }
-                    {
-                        blocks.map(block => {
-                            const blockIntersection = block.pattern.map((row, y) => row.map((cell, x) => {
-                                const targetCell = block.pattern[y + block.place.y - block.position.y]?.[x + block.place.x - block.position.x];
-                                return (targetCell == '1' && cell == '1') ? '1' : '0';
-                            }));
-                            return <div className={[style.blockContainer, style.blockContainer_notrans].join(' ')} style={{
-                                '--blockColor': { 1: 'rgb(254, 80, 80)', 2: 'rgb(255, 255, 89)', 3: 'rgb(63, 234, 63)', 4: 'rgb(46, 160, 231)' }[block.id], pointerEvents: 'none',
-                                //left: `${block.place.x * 20}px`, top: `${block.place.y * 20}px`} as any}>
-                                left: `calc(var(--blockWidth) * ${block.place.x})`, top: `calc(var(--blockHeight) * ${block.place.y})`
-                            } as any}>
-
-                                <BlockPattern pattern={blockIntersection} className={style.blockOver}></BlockPattern>
-                            </div>
-                        })
-                    }
+                    <BlockPlacesLayer blocks={blocks}></BlockPlacesLayer>
+                    <BlockInteractiveLayer
+                        blocks={blocks}
+                        containerAnimated={containerAnimated}
+                        moveStart={moveStart}
+                        moveDirection={moveDirection}
+                        onStartMove={(data) => {
+                            setMoveDirection({ x: 0, y: 0 });
+                            setMoveStart(data);
+                        }}
+                    ></BlockInteractiveLayer>
+                    <BlockOverLayer blocks={blocks}></BlockOverLayer>
                 </div>
             </div>
-           {blocks.every(it=>{return it.position.x == it.place.x && it.position.y == it.place.y}) && <WinScreen onNext={onNext}></WinScreen>}{/*<div className={style.win}>Win</div>*/} 
+            {blocks.every(it => { return it.position.x == it.place.x && it.position.y == it.place.y }) && <WinScreen onNext={onNext}></WinScreen>}
+            {/*<div className={style.win}>Win</div>*/}
         </div>
         }
     </div>
