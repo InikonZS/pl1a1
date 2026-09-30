@@ -1,6 +1,7 @@
 import { type ReactElement, useEffect, useRef, useState } from 'react';
 import style from './application.module.css'
 import { levels } from './levels';
+import { GameLogic } from './tilingLogic';
 
 export const App = () => {
   const appRef = useRef<HTMLDivElement>(null);
@@ -77,28 +78,41 @@ export const App = () => {
     actualKeyRef.current = actualKey;
   }, [actualKey]);
 
-  useEffect(()=>{
+  /*useEffect(()=>{
     if (!canvasRef.current){
       return;
     }
+    const logic = new GameLogic(levels[0]);
     const ctx = canvasRef.current.getContext('2d');
     const level = levels[0].map(it=>it.map(jt=>jt));
     const levelNext = levels[0].map(it=>it.map(jt=>jt));
     const levelAni = levels[0].map(it=>it.map(jt=>({x:0, y:0})));
     let playerPos = {x: 8, y: 1};
     let playerTargetPos = {x: playerPos.x, y: playerPos.y};
+    let playerPushing = false;
     let playerDelay = 0;
 
     const tryMove = (x: number, y: number)=>{
-        if (level[playerTargetPos.y+y][playerTargetPos.x+x]=='w'){
+        if (level[playerTargetPos.y+y][playerTargetPos.x+x]=='w' ){
           return;
+        }
+        if (['e'].includes(level[playerTargetPos.y+y][playerTargetPos.x+x])){
+           playerPushing = false;
         }
         if (['b', 'i'].includes(level[playerTargetPos.y+y][playerTargetPos.x+x])){
            level[playerTargetPos.y+y][playerTargetPos.x+x] = 'e'; 
         levelNext[playerTargetPos.y+y][playerTargetPos.x+x] = 'e'; 
+        playerPushing = false;
           return;
         }
-        if (['z'].includes(level[playerTargetPos.y+y][playerTargetPos.x+x]) ){
+        if (['z'].includes(level[playerTargetPos.y+y][playerTargetPos.x+x])){
+          if (!playerPushing){
+            playerPushing = true;
+            playerDelay = 10;
+            console.log('push')
+            return;
+          }
+          console.log('pushing')
           let item = level[playerTargetPos.y+y][playerTargetPos.x+x];
           if (level[playerTargetPos.y+y][playerTargetPos.x+x+x] != 'e'){
             return;
@@ -109,6 +123,7 @@ export const App = () => {
           levelNext[playerTargetPos.y+y][playerTargetPos.x+x+x] =item;
           levelAni[playerTargetPos.y + y][playerTargetPos.x +x]={x:x, y:0}
         }
+        playerPushing = false;
         playerTargetPos.x += x;
         playerTargetPos.y += y;
         playerDelay = 10;
@@ -158,7 +173,9 @@ export const App = () => {
       if (playerDelay>=0){
         playerDelay--;
       } else {
-        
+        if (actualKeyRef.current == 'idle'){
+          playerPushing = false;
+        }
         if (actualKeyRef.current == 'left'){
           tryMove(-1, 0);
         }
@@ -185,11 +202,6 @@ export const App = () => {
       }else {
         playerPos.y = playerTargetPos.y;
       }
-       /*level.forEach((row,y)=>{
-        row.forEach((cell,x)=>{
-          levelAni[y][x]
-        })})*/
-
 
       zonkFall();
       const tileSize = 20;
@@ -205,13 +217,67 @@ export const App = () => {
       })
       ctx.fillStyle = '#f33';
       ctx.fillRect(playerPos.x * tileSize, playerPos.y * tileSize, tileSize, tileSize);
-      /*ctx.fillStyle = '#fff9';
-      ctx.fillRect(playerTargetPos.x * tileSize, playerTargetPos.y * tileSize, tileSize, tileSize);*/
+      //ctx.fillStyle = '#fff9';
+      //ctx.fillRect(playerTargetPos.x * tileSize, playerTargetPos.y * tileSize, tileSize, tileSize);
       requestAnimationFrame((timestamp)=>{
         render(timestamp);
       })
     }
     render(Date.now());
+  }, []);*/
+
+  useEffect(()=>{
+    if (!canvasRef.current){
+      return;
+    }
+    const logic = new GameLogic(levels[0]);
+    logic.onTransitionTick = (time) => {
+      const tileSize = 20;
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      logic.tilingLogic.tileMap.forEach((row, y) => {
+
+        row.forEach((cell, x) => {
+          const ani = logic.tilingLogic.tileTransitions[y][x];
+          ctx.fillStyle = { w: 'rgb(137, 137, 137)', p: '#f22', e: '#0000', b: '#090', z: '#ff0', i: '#25c' }[cell];
+          if (ani) {
+            if (ani.type == 'move'){
+              ctx.fillRect((x + ani.x * time) * tileSize, (y + ani.y * time) * tileSize, tileSize, tileSize);
+              ctx.strokeRect((x + ani.x * time) * tileSize, (y + ani.y * time) * tileSize, tileSize, tileSize);
+            }
+            if (ani.type == 'eat'){
+              const shrinkX = Math.abs(ani.x) * time;
+              const shrinkY = Math.abs(ani.y) * time;
+              const w = tileSize * (1 - shrinkX);
+              const h = tileSize * (1 - shrinkY);
+              const renderX = (x + Math.max(0, ani.x) * time) * tileSize;
+              const renderY = (y + Math.max(0, ani.y) * time) * tileSize;
+              ctx.fillRect(renderX, renderY, w, h);
+              ctx.strokeRect(renderX, renderY, w, h);
+            }
+          } else {
+            ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+            ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
+          }
+        })
+      });
+    }
+
+    const ctx = canvasRef.current.getContext('2d');
+
+    let rafId: number = null;
+    const render = (time: number)=>{
+      logic.inputKey(actualKeyRef.current);
+      logic.tilingLogic.transitionTick(time);
+      
+      rafId = requestAnimationFrame((timestamp)=>{
+        render(timestamp);
+      })
+    }
+    render(0);
+
+    return ()=>{
+      cancelAnimationFrame(rafId);
+    }
   }, []);
 
   return <div ref={appRef} className={style.app} onDragStart={(e) => { e.preventDefault() }}>

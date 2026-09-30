@@ -22,4 +22,4 @@ const level2 = [
     'wwwwwwwwww',
 ].map(it=>it.split(''));
 
-export const levels = [level1];
+export const levels = [level2];
