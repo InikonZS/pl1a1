@@ -34,4 +34,16 @@ const level3 = [
     'wwwwwwwwww',
 ].map(it=>it.split(''));
 
-export const levels = [level3];
+const level4 = [
+    'wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww',
+    'wbbizbmbbbzibbbbbbmibbbbbzbibbmbbbibbbzbbbmbbzbbbbbbibmbbbzw',
+    'wbbzbbmbbbbbbbzbbimbbiibbbbbbbmbzbbbbibbbbmibbbzibzzbzmbibbw',
+    'wmmmmbbmbbmmmmmmmbbmzbmmmmmmmbbmbbmmmmmmmbimzbmmmmmmmbbmbbbw',
+    'wbzbibmbiibzbbbbbbmbbbbbbzbbzbmibbbzbbbbzbmbbbbbbzbbbbmzbzbw',
+    'wbbbbbmbbbzbmbbbdbmibbbbmbbbbbmbbbbimbibbbmbbbbbmbbibzmbbbbw',
+    'wbbbbbmbbbzbmbbbbbmibbbbmbbbbbmbbbbimbibbbmbbbbbmbbibzmbbbbw',
+    'wxeeeeeeeeeeeeeeeepeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeew',
+    'wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww',
+].map(it=>it.split(''));
+
+export const levels = [level4];

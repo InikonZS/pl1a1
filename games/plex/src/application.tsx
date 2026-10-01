@@ -272,9 +272,39 @@ export const App = () => {
       return;
     }
     const logic = new GameLogic(levels[0]);
+    let cameraPos: {x: number, y: number} = null;
     logic.onTransitionTick = (time) => {
       const tileSize = 32;
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      const playerPos = {x: 0, y: 0};
+
+      logic.tilingLogic.tileMapNext.forEach((row, y) => {
+        row.forEach((cell, x) => {
+          if (['p','ppr', 'ppl'].includes(cell)){
+            playerPos.x = x - Math.floor((ctx.canvas.width / tileSize)/2), //Math.floor(logic.tilingLogic.tileMap[0].length /2);
+            playerPos.y = y - Math.floor((ctx.canvas.height / tileSize)/2) //Math.floor(logic.tilingLogic.tileMap.length /1);
+            if (cameraPos == null){
+              cameraPos = {...playerPos};
+            }
+          };
+        })
+      });
+      //if (cameraPos.x !=playerPos.x || cameraPos.y != playerPos.y){
+        //cameraPos.x += Math.sign(-cameraPos.x + playerPos.x)/10;
+        //cameraPos.y += Math.sign(-cameraPos.y + playerPos.y)/10;
+        cameraPos.x = cameraPos.x + (-cameraPos.x + playerPos.x)* time/2;
+        cameraPos.y = cameraPos.y +(-cameraPos.y + playerPos.y)*time/2;
+        if (Math.abs(cameraPos.x - playerPos.x)<0.1){
+          cameraPos.x = playerPos.x;
+        }
+        if (Math.abs(cameraPos.y - playerPos.y)<0.1){
+          cameraPos.y = playerPos.y;
+        }
+        const limitedCameraPos = {
+          x: logic.tilingLogic.tileMap[0].length - (ctx.canvas.width / tileSize)<= 0 ? (logic.tilingLogic.tileMap[0].length /2 - (ctx.canvas.width / tileSize) / 2) :  Math.min(Math.max(cameraPos.x, 0), Math.floor(logic.tilingLogic.tileMap[0].length - (ctx.canvas.width / tileSize))),
+          y: logic.tilingLogic.tileMap.length - (ctx.canvas.height / tileSize)<= 0 ? (logic.tilingLogic.tileMap.length /2 - (ctx.canvas.height / tileSize) / 2) : Math.min(Math.max(cameraPos.y, 0), Math.floor(logic.tilingLogic.tileMap.length - (ctx.canvas.height / tileSize))),
+        }
+      //}
       logic.tilingLogic.tileMap.forEach((row, y) => {
 
         row.forEach((cell, x) => {
@@ -286,7 +316,12 @@ export const App = () => {
           const drawTile = (x: number, y: number, w = 1, h = 1, sheetOffset = 0, sheetWidth = 0)=>{
             if (image){
               //0, 0, w *image.width, h * image.height,
-                ctx.drawImage(image, w == 1 ? 0 : (x % 1) *image.width, h == 1 ? 0 : (y % 1) *image.height, w *image.width, h * image.height, x * tileSize, y * tileSize, w * tileSize, h * tileSize);
+                ctx.drawImage(image, 
+                  w == 1 ? 0 : (x % 1) *image.width, 
+                  h == 1 ? 0 : (y % 1) *image.height, 
+                  w *image.width, 
+                  h * image.height, 
+                  Math.floor((x - limitedCameraPos.x) * tileSize), Math.floor((y - limitedCameraPos.y) * tileSize), w * tileSize, h * tileSize);
               } else {
                 ctx.fillRect(x * tileSize, y * tileSize, w * tileSize, h * tileSize);
                 if (cell != 'e') {
@@ -302,7 +337,7 @@ export const App = () => {
                   h == 1 ? 0 : (y % 1) *image.height,
                   w * sheetWidth,
                   h * image.height, 
-                  x * tileSize, y * tileSize, w * tileSize, h * tileSize);
+                  Math.floor((x - limitedCameraPos.x) * tileSize), Math.floor((y - limitedCameraPos.y) * tileSize), w * tileSize, h * tileSize);
               } else {
                 ctx.fillRect(x * tileSize, y * tileSize, w * tileSize, h * tileSize);
                 if (cell != 'e') {
@@ -372,7 +407,7 @@ export const App = () => {
     <div ref={overlayRef} className={style.overlay}>
       {/* <CanvasTest></CanvasTest> */}
       {!resources && <div className={style.loading}>loading...</div>}
-      {resources && <canvas ref={canvasRef} width={800} height={600}></canvas>}
+      {resources && <canvas ref={canvasRef} width={800} height={600} className={style.canvas}></canvas>}
     </div>
   </div>
 }
