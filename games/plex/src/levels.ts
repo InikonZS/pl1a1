@@ -22,4 +22,16 @@ const level2 = [
     'wwwwwwwwww',
 ].map(it=>it.split(''));
 
-export const levels = [level2];
+const level3 = [
+    'wwwwwwwwww',
+    'wbezebbbpw',
+    'wbbzibbbbw',
+    'wbbzibbbbw',
+    'wbbzibbbbw',
+    'wbbzibbbbw',
+    'wbbbbbbbbw',
+    'wbbbbbbbbw',
+    'wwwwwwwwww',
+].map(it=>it.split(''));
+
+export const levels = [level3];

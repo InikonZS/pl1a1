@@ -28,3 +28,7 @@
   height: 100%;
   object-fit: contain;
 }
+
+.loading {
+  color: #fff;
+}

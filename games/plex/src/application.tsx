@@ -2,6 +2,37 @@ import { type ReactElement, useEffect, useRef, useState } from 'react';
 import style from './application.module.css'
 import { levels } from './levels';
 import { GameLogic } from './tilingLogic';
+import { CanvasTest } from './canvasTest';
+
+const usePreloader = ()=>{
+  const [resources, setResources] = useState<Record<string, HTMLImageElement>>({});
+
+  useEffect(()=>{
+    const resMap: Record<string, HTMLImageElement> = {};
+    const promises =
+    [
+      './supainf.png',
+      './supapcb.png',
+      './supawall.png',
+      './supazonk.png',
+    ].map(name=>{
+      const promise = new Promise<void>(resolve=>{
+        const image = new Image();
+        image.src = name;
+        image.onload = ()=>{
+          resMap[name] = image;
+          resolve();
+        }
+      });
+      return promise;
+    });
+    Promise.all(promises).then(()=>{
+      setResources(resMap);
+    })
+  },[]);
+
+  return resources;
+}
 
 export const App = () => {
   const appRef = useRef<HTMLDivElement>(null);
@@ -9,6 +40,7 @@ export const App = () => {
   const [actualKey, setActualKey] = useState('idle');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const actualKeyRef = useRef('idle');
+  const resources = usePreloader();
   //const [level, setLevel] = useState<string[][]>(null);
 
   useEffect(() => {
@@ -74,7 +106,6 @@ export const App = () => {
   }, []);
 
   useEffect(()=>{
-    console.log(actualKey)
     actualKeyRef.current = actualKey;
   }, [actualKey]);
 
@@ -232,31 +263,46 @@ export const App = () => {
     }
     const logic = new GameLogic(levels[0]);
     logic.onTransitionTick = (time) => {
-      const tileSize = 20;
+      const tileSize = 32;
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       logic.tilingLogic.tileMap.forEach((row, y) => {
 
         row.forEach((cell, x) => {
           const ani = logic.tilingLogic.tileTransitions[y][x];
-          ctx.fillStyle = { w: 'rgb(137, 137, 137)', p: '#f22', e: '#0000', b: '#090', z: '#ff0', i: '#25c' }[cell];
+          const colors = { w: 'rgb(137, 137, 137)', p: '#f22', e: '#0000', b: '#090', z: '#ff0', i: '#25c' };
+          const images = { w: './supawall.png', b: './supapcb.png', z: './supazonk.png', i: './supainf.png'};
+          ctx.fillStyle = colors[cell as keyof typeof colors];
+          const image = resources[images[cell as keyof typeof images]];
+          const drawTile = (x: number, y: number, w = 1, h = 1)=>{
+            if (image){
+              //0, 0, w *image.width, h * image.height,
+                ctx.drawImage(image, w == 1 ? 0 : (x % 1) *image.width, h == 1 ? 0 : (y % 1) *image.height, w *image.width, h * image.height, x * tileSize, y * tileSize, w * tileSize, h * tileSize);
+              } else {
+                ctx.fillRect(x * tileSize, y * tileSize, w * tileSize, h * tileSize);
+                if (cell != 'e') {
+                  ctx.strokeRect(x * tileSize, y * tileSize, w * tileSize, h * tileSize);
+                }
+              }
+            }
           if (ani) {
             if (ani.type == 'move'){
-              ctx.fillRect((x + ani.x * time) * tileSize, (y + ani.y * time) * tileSize, tileSize, tileSize);
-              ctx.strokeRect((x + ani.x * time) * tileSize, (y + ani.y * time) * tileSize, tileSize, tileSize);
+              drawTile((x + ani.x * time), (y + ani.y * time));
+              //ctx.fillRect((x + ani.x * time) * tileSize, (y + ani.y * time) * tileSize, tileSize, tileSize);
+              //ctx.strokeRect((x + ani.x * time) * tileSize, (y + ani.y * time) * tileSize, tileSize, tileSize);
             }
             if (ani.type == 'eat'){
               const shrinkX = Math.abs(ani.x) * time;
               const shrinkY = Math.abs(ani.y) * time;
-              const w = tileSize * (1 - shrinkX);
-              const h = tileSize * (1 - shrinkY);
-              const renderX = (x + Math.max(0, ani.x) * time) * tileSize;
-              const renderY = (y + Math.max(0, ani.y) * time) * tileSize;
-              ctx.fillRect(renderX, renderY, w, h);
-              ctx.strokeRect(renderX, renderY, w, h);
+              const w = (1 - shrinkX);
+              const h = (1 - shrinkY);
+              const renderX = (x + Math.max(0, ani.x) * time);
+              const renderY = (y + Math.max(0, ani.y) * time);
+              //ctx.fillRect(renderX, renderY, w, h);
+              //ctx.strokeRect(renderX, renderY, w, h);
+              drawTile(renderX, renderY, w, h);
             }
           } else {
-            ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-            ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
+            drawTile(x, y);
           }
         })
       });
@@ -278,11 +324,13 @@ export const App = () => {
     return ()=>{
       cancelAnimationFrame(rafId);
     }
-  }, []);
+  }, [resources]);
 
   return <div ref={appRef} className={style.app} onDragStart={(e) => { e.preventDefault() }}>
     <div ref={overlayRef} className={style.overlay}>
-    <canvas ref={canvasRef} width={800} height={600}></canvas>
+      {/* <CanvasTest></CanvasTest> */}
+      {!resources && <div className={style.loading}>loading...</div>}
+      {resources && <canvas ref={canvasRef} width={800} height={600}></canvas>}
     </div>
   </div>
 }

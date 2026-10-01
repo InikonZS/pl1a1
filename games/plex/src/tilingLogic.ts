@@ -22,7 +22,7 @@ export class TilingLogic{
     }
 
     checkCell(tileTypes: string[], x: number, y: number){
-        return tileTypes.includes(this.tileMap[y]?.[x]) && tileTypes.includes(this.tileMapNext[y]?.[x]);
+        return tileTypes.includes(this.tileMap[y]?.[x]) && tileTypes.includes(this.tileMapNext[y]?.[x]) && (this.tileTransitions[y]?.[x] == null);
     }
 
     mainTick(){
@@ -89,15 +89,6 @@ export class GameLogic{
                             this.tilingLogic.tileTransitions[y][x] = {x: direction.x, y: direction.y, type: 'move'};
                             this.tilingLogic.tileTransitions[y+direction.y][x+direction.x] = {x: direction.x, y: direction.y, type: 'eat'};
                         }
-                        const isZonk = this.tilingLogic.checkCell(['z'], x + direction.x, y+ direction.y) &&
-                            this.tilingLogic.checkCell(['e'], x + direction.x * 2, y+ direction.y * 2);
-                        if (isZonk){
-                            this.tilingLogic.tileMapNext[y+direction.y][x+direction.x] = 'p';
-                            this.tilingLogic.tileMapNext[y+direction.y*2][x+direction.x*2] = 'z';
-                            this.tilingLogic.tileMapNext[y][x] = 'e';
-                            this.tilingLogic.tileTransitions[y][x] = {x: direction.x, y: direction.y, type: 'move'};
-                            this.tilingLogic.tileTransitions[y+direction.y][x+direction.x] = {x: direction.x, y: direction.y, type: 'move'};
-                        }
                     }
                 }
                 if (cell == 'z'){
@@ -125,6 +116,25 @@ export class GameLogic{
                         this.tilingLogic.tileMapNext[y+direction.y][x+direction.x] = 'z';
                         this.tilingLogic.tileMapNext[y][x] = 'e';
                         this.tilingLogic.tileTransitions[y][x] = {x: direction.x, y: direction.y, type: 'move'};
+                    }
+                }
+            })
+        })
+        this.tilingLogic.tileMap.forEach((row,y)=>{
+            row.forEach((cell,x)=>{
+                if (cell == 'p'){
+                    const direction = directions[this.key as keyof typeof directions];
+                    if (direction){ 
+                        const isZonk = this.tilingLogic.checkCell(['z'], x + direction.x, y+ direction.y) &&
+                        this.tilingLogic.checkCell(['e'], x + direction.x * 2, y+ direction.y * 2) && direction.y == 0 && this.tilingLogic.tileTransitions[y + direction.y][x + direction.x] == null;
+                        if (isZonk){
+                            console.log('zonk push');
+                            this.tilingLogic.tileMapNext[y+direction.y][x+direction.x] = 'p';
+                            this.tilingLogic.tileMapNext[y+direction.y*2][x+direction.x*2] = 'z';
+                            this.tilingLogic.tileMapNext[y][x] = 'e';
+                            this.tilingLogic.tileTransitions[y][x] = {x: direction.x, y: direction.y, type: 'move'};
+                            this.tilingLogic.tileTransitions[y+direction.y][x+direction.x] = {x: direction.x, y: direction.y, type: 'move'};
+                        }
                     }
                 }
             })
