@@ -3,7 +3,7 @@ export class TilingLogic{
     tileMapNext: string[][];
     tileTransitions: ({x: number, y: number, type: string} | null)[][];
     lastTimeStamp: number = 0;
-    mainTickTime = 150;
+    mainTickTime = 16*8;
     transitionTimeCounter = 0;
     onTransitionTick: (transitionTime: number)=>void;
     onMainTick: ()=>void;
@@ -79,6 +79,9 @@ export class GameLogic{
         }
         this.tilingLogic.tileMap.forEach((row,y)=>{
             row.forEach((cell,x)=>{
+                if (['ppl', 'ppr'].includes(cell) && this.key == 'idle'){
+                    this.tilingLogic.tileMapNext[y][x] = 'p';
+                }
                 if (cell == 'p'){
                     const direction = directions[this.key as keyof typeof directions];
                     if (direction){ 
@@ -91,20 +94,48 @@ export class GameLogic{
                         }
                     }
                 }
-                if (cell == 'z'){
+                if (['d'].includes(cell)){
                     const down = directions['down'];
                     const canFall = this.tilingLogic.checkCell(['e'], x + down.x, y+ down.y);
                     if (canFall){
                         const direction = down;
-                        this.tilingLogic.tileMapNext[y+direction.y][x+direction.x] = 'z';
+                        this.tilingLogic.tileMapNext[y+direction.y][x+direction.x] = 'da';
+                        this.tilingLogic.tileMapNext[y][x] = 'e';
+                        this.tilingLogic.tileTransitions[y][x] = {x: direction.x, y: direction.y, type: 'move'};
+                    }
+                }
+                if (['da'].includes(cell)){
+                    const down = directions['down'];
+                    const canFall = this.tilingLogic.checkCell(['e'], x + down.x, y+ down.y);
+                    if (canFall){
+                        const direction = down;
+                        this.tilingLogic.tileMapNext[y+direction.y][x+direction.x] = cell;
+                        this.tilingLogic.tileMapNext[y][x] = 'e';
+                        this.tilingLogic.tileTransitions[y][x] = {x: direction.x, y: direction.y, type: 'move'};
+                    } else {
+                        for (let i = -1; i<=1; i++){
+                            for (let j = -1; j<=1; j++){
+                                if (!['w'].includes(this.tilingLogic.tileMap[y+i][x+j])){
+                                    this.tilingLogic.tileMapNext[y+i][x+j] = 'e';
+                                }
+                            }
+                        }
+                    }
+                }
+                if (['z', 'i'].includes(cell)){
+                    const down = directions['down'];
+                    const canFall = this.tilingLogic.checkCell(['e'], x + down.x, y+ down.y);
+                    if (canFall){
+                        const direction = down;
+                        this.tilingLogic.tileMapNext[y+direction.y][x+direction.x] = cell;
                         this.tilingLogic.tileMapNext[y][x] = 'e';
                         this.tilingLogic.tileTransitions[y][x] = {x: direction.x, y: direction.y, type: 'move'};
                     }
                     const left = directions['left'];
                     const right = directions['right'];
 
-                    const canLeftFall = this.tilingLogic.checkCell(['e'], x + left.x, y+ left.y) && this.tilingLogic.checkCell(['z'], x + down.x, y+ down.y) && this.tilingLogic.checkCell(['e'], x + down.x + left.x, y+ down.y + left.y);
-                    const canRightFall = this.tilingLogic.checkCell(['e'], x + right.x, y+ right.y) && this.tilingLogic.checkCell(['z'], x + down.x, y+ down.y) && this.tilingLogic.checkCell(['e'], x + down.x + right.x, y+ down.y + right.y);
+                    const canLeftFall = this.tilingLogic.checkCell(['e'], x + left.x, y+ left.y) && this.tilingLogic.checkCell(['z', 'i', 'm', '[', ']'], x + down.x, y+ down.y) && this.tilingLogic.checkCell(['e'], x + down.x + left.x, y+ down.y + left.y);
+                    const canRightFall = this.tilingLogic.checkCell(['e'], x + right.x, y+ right.y) && this.tilingLogic.checkCell(['z', 'i', 'm', '[', ']'], x + down.x, y+ down.y) && this.tilingLogic.checkCell(['e'], x + down.x + right.x, y+ down.y + right.y);
                     let side = null;
                     if (canLeftFall){
                         side = left;
@@ -113,7 +144,7 @@ export class GameLogic{
                     }
                     if (side){
                         const direction = side;
-                        this.tilingLogic.tileMapNext[y+direction.y][x+direction.x] = 'z';
+                        this.tilingLogic.tileMapNext[y+direction.y][x+direction.x] = cell;
                         this.tilingLogic.tileMapNext[y][x] = 'e';
                         this.tilingLogic.tileTransitions[y][x] = {x: direction.x, y: direction.y, type: 'move'};
                     }
@@ -125,12 +156,23 @@ export class GameLogic{
                 if (cell == 'p'){
                     const direction = directions[this.key as keyof typeof directions];
                     if (direction){ 
-                        const isZonk = this.tilingLogic.checkCell(['z'], x + direction.x, y+ direction.y) &&
+                        const isZonk = this.tilingLogic.checkCell(['z', 'd'], x + direction.x, y+ direction.y) &&
                         this.tilingLogic.checkCell(['e'], x + direction.x * 2, y+ direction.y * 2) && direction.y == 0 && this.tilingLogic.tileTransitions[y + direction.y][x + direction.x] == null;
                         if (isZonk){
-                            console.log('zonk push');
+                            //console.log('zonk push');
+                            this.tilingLogic.tileMapNext[y][x] = direction.x < 0 ? 'ppl': 'ppr';
+                        }
+                    }
+                }
+                if (['ppl', 'ppr'].includes(cell)){
+                    const direction = directions[this.key as keyof typeof directions];
+                    if (direction){ 
+                        const isZonk = this.tilingLogic.checkCell(['z','d'], x + direction.x, y+ direction.y) &&
+                        this.tilingLogic.checkCell(['e'], x + direction.x * 2, y+ direction.y * 2) && direction.y == 0 && this.tilingLogic.tileTransitions[y + direction.y][x + direction.x] == null;
+                        if (isZonk){
+                            //console.log('zonk push');
                             this.tilingLogic.tileMapNext[y+direction.y][x+direction.x] = 'p';
-                            this.tilingLogic.tileMapNext[y+direction.y*2][x+direction.x*2] = 'z';
+                            this.tilingLogic.tileMapNext[y+direction.y*2][x+direction.x*2] = this.tilingLogic.tileMap[y+direction.y][x+direction.x];
                             this.tilingLogic.tileMapNext[y][x] = 'e';
                             this.tilingLogic.tileTransitions[y][x] = {x: direction.x, y: direction.y, type: 'move'};
                             this.tilingLogic.tileTransitions[y+direction.y][x+direction.x] = {x: direction.x, y: direction.y, type: 'move'};

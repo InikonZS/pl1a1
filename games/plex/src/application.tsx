@@ -15,13 +15,23 @@ const usePreloader = ()=>{
       './supapcb.png',
       './supawall.png',
       './supazonk.png',
+      './supamicro.png',
+      './supamicrostart.png',
+      './supamicroend.png',
+      './supaexit.png',
+      './supadisc.png',
+      './supahero.png'
     ].map(name=>{
       const promise = new Promise<void>(resolve=>{
         const image = new Image();
-        image.src = name;
-        image.onload = ()=>{
-          resMap[name] = image;
-          resolve();
+        if (typeof name == 'string') {
+          image.src =  name;
+          image.onload = ()=>{
+            resMap[name] = image;
+            resolve();
+          }
+        } else {
+          
         }
       });
       return promise;
@@ -270,10 +280,10 @@ export const App = () => {
         row.forEach((cell, x) => {
           const ani = logic.tilingLogic.tileTransitions[y][x];
           const colors = { w: 'rgb(137, 137, 137)', p: '#f22', e: '#0000', b: '#090', z: '#ff0', i: '#25c' };
-          const images = { w: './supawall.png', b: './supapcb.png', z: './supazonk.png', i: './supainf.png'};
+          const images = { p: './supahero.png', ppl: './supahero.png', ppr: './supahero.png' ,w: './supawall.png', b: './supapcb.png', z: './supazonk.png', i: './supainf.png', m: './supamicro.png', '[': './supamicrostart.png', ']': './supamicroend.png', x: './supaexit.png', d: './supadisc.png', da: './supadisc.png'};
           ctx.fillStyle = colors[cell as keyof typeof colors];
           const image = resources[images[cell as keyof typeof images]];
-          const drawTile = (x: number, y: number, w = 1, h = 1)=>{
+          const drawTile = (x: number, y: number, w = 1, h = 1, sheetOffset = 0, sheetWidth = 0)=>{
             if (image){
               //0, 0, w *image.width, h * image.height,
                 ctx.drawImage(image, w == 1 ? 0 : (x % 1) *image.width, h == 1 ? 0 : (y % 1) *image.height, w *image.width, h * image.height, x * tileSize, y * tileSize, w * tileSize, h * tileSize);
@@ -284,9 +294,33 @@ export const App = () => {
                 }
               }
             }
+          const drawTileAtlas = (x: number, y: number, w = 1, h = 1, sheetOffset = 0, sheetWidth = 0)=>{
+            if (image){
+              //0, 0, w *image.width, h * image.height,
+                ctx.drawImage(image, 
+                  w == 1 ? sheetOffset : (x % 1) *image.width + sheetOffset,
+                  h == 1 ? 0 : (y % 1) *image.height,
+                  w * sheetWidth,
+                  h * image.height, 
+                  x * tileSize, y * tileSize, w * tileSize, h * tileSize);
+              } else {
+                ctx.fillRect(x * tileSize, y * tileSize, w * tileSize, h * tileSize);
+                if (cell != 'e') {
+                  ctx.strokeRect(x * tileSize, y * tileSize, w * tileSize, h * tileSize);
+                }
+              }
+            }
           if (ani) {
             if (ani.type == 'move'){
-              drawTile((x + ani.x * time), (y + ani.y * time));
+              if (cell == 'p'){
+                drawTileAtlas((x + ani.x * time), (y + ani.y * time), 1, 1, 2+(2+32)* (ani.x < 0 ?(time<0.66 ? time<0.33 ? 0 : 1 : 2) : (time<0.66 ? time<0.33 ? 5 : 4 : 3)), 32);
+              } else if (cell == 'ppl'){
+                drawTileAtlas((x + ani.x * time), (y + ani.y * time), 1, 1, 2+(2+32)*11, 32);
+              } else if (cell == 'ppr'){
+                drawTileAtlas((x + ani.x * time), (y + ani.y * time), 1, 1, 2+(2+32)*12, 32);
+              } else {
+                drawTile((x + ani.x * time), (y + ani.y * time));
+              }
               //ctx.fillRect((x + ani.x * time) * tileSize, (y + ani.y * time) * tileSize, tileSize, tileSize);
               //ctx.strokeRect((x + ani.x * time) * tileSize, (y + ani.y * time) * tileSize, tileSize, tileSize);
             }
@@ -302,7 +336,15 @@ export const App = () => {
               drawTile(renderX, renderY, w, h);
             }
           } else {
-            drawTile(x, y);
+            if (cell == 'p'){
+              drawTileAtlas(x, y, 1, 1, 2+(2+32)*14, 32);
+            } else if (cell == 'ppl'){
+              drawTileAtlas(x, y, 1, 1, 2+(2+32)*11, 32);
+            } else if (cell == 'ppr'){
+              drawTileAtlas(x, y, 1, 1, 2+(2+32)*12, 32);
+            }  else {
+              drawTile(x, y);
+            }
           }
         })
       });

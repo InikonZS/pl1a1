@@ -24,12 +24,12 @@ const level2 = [
 
 const level3 = [
     'wwwwwwwwww',
-    'wbezebbbpw',
+    'wbezebxbpw',
+    'wbbzibdbbw',
     'wbbzibbbbw',
     'wbbzibbbbw',
     'wbbzibbbbw',
-    'wbbzibbbbw',
-    'wbbbbbbbbw',
+    'wbb[]mbbbw',
     'wbbbbbbbbw',
     'wwwwwwwwww',
 ].map(it=>it.split(''));
