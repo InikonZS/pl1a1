@@ -3,6 +3,7 @@ import style from './application.module.css'
 import { levels } from './levels';
 import { GameLogic } from './tilingLogic';
 import { CanvasTest } from './canvasTest';
+import { MobileStick } from './mobileStick';
 
 const usePreloader = ()=>{
   const [resources, setResources] = useState<Record<string, HTMLImageElement>>(null);
@@ -450,6 +451,7 @@ export const App = () => {
       {failed && <div className={style.loading} onClick={()=>{setLevelHash(last=>last+1)}}>Restart</div>}
       {win && <div className={style.loading} onClick={()=>{setLevelHash(last=>last+1)}}>Win restart</div>}
       {resources && <canvas ref={canvasRef} width={800} height={600} className={style.canvas}></canvas>}
+      <MobileStick onActualKey={(key)=>{actualKeyRef.current = key}}></MobileStick>
     </div>
   </div>
 }

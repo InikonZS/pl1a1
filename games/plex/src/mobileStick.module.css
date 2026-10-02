@@ -1,0 +1,25 @@
+.mobileButton{
+    color: #fff;
+    width: 50px;
+    height: 50px;
+    border-radius: 30px;
+    border: 1px solid #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.mobileJoystick{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 90px;
+    border: 1px solid #fff;
+    width: min-content;
+    touch-action: none;
+    position: relative;
+}
+
+.mobileJoystickCenter{
+    display: flex;
+}
