@@ -32,7 +32,7 @@ export class TilingLogic{
 
     transitionTick(timestamp: number){
         const delta = timestamp - this.lastTimeStamp;
-        this.transitionTimeCounter += delta;
+        this.transitionTimeCounter += Math.min(delta, 16*4);
         this.lastTimeStamp = timestamp;
         const transitionTime = Math.max(Math.min((this.transitionTimeCounter / this.mainTickTime), 1), 0);
         //console.log('rt', this.transitionTimeCounter, timestamp);
@@ -50,6 +50,8 @@ export class GameLogic{
     onTransitionTick: (transitionTime: number)=>void;
     onMainTick: ()=>void;
     appliedKey: string;
+    collected: number = 0;
+    failed: boolean;
 
     constructor(tileMapTemplate: Array<Array<string>>){
         this.tilingLogic =  new TilingLogic(tileMapTemplate);
@@ -79,12 +81,20 @@ export class GameLogic{
         }
         this.tilingLogic.tileMap.forEach((row,y)=>{
             row.forEach((cell,x)=>{
+                if (['o'].includes(cell)){
+                    this.tilingLogic.tileTransitions[y][x] = {x: 0, y:0, type: 'idle'};
+                    this.tilingLogic.tileMapNext[y][x] = 'e';
+                }
                 if (['ppl', 'ppr'].includes(cell) && this.key == 'idle'){
                     this.tilingLogic.tileMapNext[y][x] = 'p';
                 }
                 if (cell == 'p'){
                     const direction = directions[this.key as keyof typeof directions];
                     if (direction){ 
+                        const isInfotron = this.tilingLogic.checkCell(['i'], x + direction.x, y+ direction.y);
+                        if (isInfotron){
+                            this.collected++;
+                        }
                         const isEatable = this.tilingLogic.checkCell(['b', 'e', 'i'], x + direction.x, y+ direction.y);
                         if (isEatable){
                             this.tilingLogic.tileMapNext[y+direction.y][x+direction.x] = 'p';
@@ -116,20 +126,40 @@ export class GameLogic{
                         for (let i = -1; i<=1; i++){
                             for (let j = -1; j<=1; j++){
                                 if (!['w'].includes(this.tilingLogic.tileMap[y+i][x+j])){
-                                    this.tilingLogic.tileMapNext[y+i][x+j] = 'e';
+                                    this.tilingLogic.tileMapNext[y+i][x+j] = 'o';
+                                    //this.tilingLogic.tileTransitions[y+i][x+j] = {x: 0, y:0, type: 'idle'};
                                 }
                             }
                         }
                     }
                 }
-                if (['z', 'i'].includes(cell)){
+                if (['z', 'zd', 'i', 'id'].includes(cell)){
                     const down = directions['down'];
                     const canFall = this.tilingLogic.checkCell(['e'], x + down.x, y+ down.y);
                     if (canFall){
                         const direction = down;
-                        this.tilingLogic.tileMapNext[y+direction.y][x+direction.x] = cell;
+                        if (['z', 'i'].includes(cell)) {
+                            this.tilingLogic.tileMapNext[y+direction.y][x+direction.x] = cell + 'd';
+                        } else {
+                            this.tilingLogic.tileMapNext[y+direction.y][x+direction.x] = cell;
+                        }
                         this.tilingLogic.tileMapNext[y][x] = 'e';
                         this.tilingLogic.tileTransitions[y][x] = {x: direction.x, y: direction.y, type: 'move'};
+                    } else {
+                        if (['zd', 'id'].includes(cell)) {
+                            this.tilingLogic.tileMapNext[y][x] = cell[0];
+                            if (this.tilingLogic.checkCell(['p'], x + down.x, y+ down.y)){
+                                //console.log('fail')
+                                for (let i = -1; i<=1; i++){
+                                    for (let j = -1; j<=1; j++){
+                                        if (!['w'].includes(this.tilingLogic.tileMap[y+ down.y+i][x+ down.x+j])){
+                                            this.tilingLogic.tileMapNext[y+ down.y+i][x+ down.x+j] = 'o';
+                                            //this.tilingLogic.tileTransitions[y+ down.y+i][x+ down.x+j] = {x: 0, y:0, type: 'idle'};
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                     const left = directions['left'];
                     const right = directions['right'];

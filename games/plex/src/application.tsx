@@ -5,7 +5,7 @@ import { GameLogic } from './tilingLogic';
 import { CanvasTest } from './canvasTest';
 
 const usePreloader = ()=>{
-  const [resources, setResources] = useState<Record<string, HTMLImageElement>>({});
+  const [resources, setResources] = useState<Record<string, HTMLImageElement>>(null);
 
   useEffect(()=>{
     const resMap: Record<string, HTMLImageElement> = {};
@@ -20,7 +20,8 @@ const usePreloader = ()=>{
       './supamicroend.png',
       './supaexit.png',
       './supadisc.png',
-      './supahero.png'
+      './supahero.png',
+      './expl1.png'
     ].map(name=>{
       const promise = new Promise<void>(resolve=>{
         const image = new Image();
@@ -51,6 +52,9 @@ export const App = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const actualKeyRef = useRef('idle');
   const resources = usePreloader();
+  const [collected, setCollected] = useState(0);
+  const [failed, setFailed] = useState(false);
+  const [levelHash, setLevelHash] = useState(0);
   //const [level, setLevel] = useState<string[][]>(null);
 
   useEffect(() => {
@@ -268,16 +272,21 @@ export const App = () => {
   }, []);*/
 
   useEffect(()=>{
-    if (!canvasRef.current){
+    if (!canvasRef.current || !resources){
       return;
     }
+    setFailed(false);
     const logic = new GameLogic(levels[0]);
     let cameraPos: {x: number, y: number} = null;
+    const playerPos = {x: 0, y: 0};
+    logic.onMainTick = () => {
+      setCollected(logic.collected);
+    }
     logic.onTransitionTick = (time) => {
       const tileSize = 32;
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      const playerPos = {x: 0, y: 0};
 
+      let foundPlayer = false;
       logic.tilingLogic.tileMapNext.forEach((row, y) => {
         row.forEach((cell, x) => {
           if (['p','ppr', 'ppl'].includes(cell)){
@@ -286,9 +295,14 @@ export const App = () => {
             if (cameraPos == null){
               cameraPos = {...playerPos};
             }
+            foundPlayer = true;
           };
         })
       });
+      if (!foundPlayer){
+        //console.log('failed');
+        setFailed(true);
+      }
       //if (cameraPos.x !=playerPos.x || cameraPos.y != playerPos.y){
         //cameraPos.x += Math.sign(-cameraPos.x + playerPos.x)/10;
         //cameraPos.y += Math.sign(-cameraPos.y + playerPos.y)/10;
@@ -310,7 +324,7 @@ export const App = () => {
         row.forEach((cell, x) => {
           const ani = logic.tilingLogic.tileTransitions[y][x];
           const colors = { w: 'rgb(137, 137, 137)', p: '#f22', e: '#0000', b: '#090', z: '#ff0', i: '#25c' };
-          const images = { p: './supahero.png', ppl: './supahero.png', ppr: './supahero.png' ,w: './supawall.png', b: './supapcb.png', z: './supazonk.png', i: './supainf.png', m: './supamicro.png', '[': './supamicrostart.png', ']': './supamicroend.png', x: './supaexit.png', d: './supadisc.png', da: './supadisc.png'};
+          const images = { p: './supahero.png', ppl: './supahero.png', ppr: './supahero.png' ,w: './supawall.png', b: './supapcb.png', z: './supazonk.png', i: './supainf.png', zd: './supazonk.png', id: './supainf.png', m: './supamicro.png', '[': './supamicrostart.png', ']': './supamicroend.png', x: './supaexit.png', d: './supadisc.png', da: './supadisc.png', o: './expl1.png'};
           ctx.fillStyle = colors[cell as keyof typeof colors];
           const image = resources[images[cell as keyof typeof images]];
           const drawTile = (x: number, y: number, w = 1, h = 1, sheetOffset = 0, sheetWidth = 0)=>{
@@ -346,6 +360,9 @@ export const App = () => {
               }
             }
           if (ani) {
+            const timeCut = (time: number, frames: number)=>{
+              return Math.floor(time * frames)
+            }
             if (ani.type == 'move'){
               if (cell == 'p'){
                 drawTileAtlas((x + ani.x * time), (y + ani.y * time), 1, 1, 2+(2+32)* (ani.x < 0 ?(time<0.66 ? time<0.33 ? 0 : 1 : 2) : (time<0.66 ? time<0.33 ? 5 : 4 : 3)), 32);
@@ -369,6 +386,11 @@ export const App = () => {
               //ctx.fillRect(renderX, renderY, w, h);
               //ctx.strokeRect(renderX, renderY, w, h);
               drawTile(renderX, renderY, w, h);
+            }
+            if (ani.type == 'idle'){
+              if (cell == 'o'){
+                drawTileAtlas(x, y, 1, 1, 2+(2+32)* timeCut(time, 7), 32);
+              }
             }
           } else {
             if (cell == 'p'){
@@ -401,12 +423,14 @@ export const App = () => {
     return ()=>{
       cancelAnimationFrame(rafId);
     }
-  }, [resources]);
+  }, [resources, levelHash]);
 
   return <div ref={appRef} className={style.app} onDragStart={(e) => { e.preventDefault() }}>
     <div ref={overlayRef} className={style.overlay}>
       {/* <CanvasTest></CanvasTest> */}
       {!resources && <div className={style.loading}>loading...</div>}
+      <div className={style.loading}>Collected {collected}/20</div>
+      {failed && <div className={style.loading} onClick={()=>{setLevelHash(last=>last+1)}}>Restart</div>}
       {resources && <canvas ref={canvasRef} width={800} height={600} className={style.canvas}></canvas>}
     </div>
   </div>

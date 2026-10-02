@@ -31,4 +31,6 @@
 
 .loading {
   color: #fff;
+  position: relative;
+  z-index: 1;
 }
