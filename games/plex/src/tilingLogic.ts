@@ -52,9 +52,11 @@ export class GameLogic{
     appliedKey: string;
     collected: number = 0;
     failed: boolean;
+    targetCount: number;
 
-    constructor(tileMapTemplate: Array<Array<string>>){
-        this.tilingLogic =  new TilingLogic(tileMapTemplate);
+    constructor(tileMapTemplate: {field: Array<Array<string>>, count: number}){
+        this.targetCount = tileMapTemplate.count;
+        this.tilingLogic =  new TilingLogic(tileMapTemplate.field);
         this.tilingLogic.onTransitionTick = this.handleTransitionTick;
         this.tilingLogic.onMainTick = this.handleMainTick;
     }
@@ -85,7 +87,7 @@ export class GameLogic{
                     this.tilingLogic.tileTransitions[y][x] = {x: 0, y:0, type: 'idle'};
                     this.tilingLogic.tileMapNext[y][x] = 'e';
                 }
-                if (['ppl', 'ppr'].includes(cell) && this.key == 'idle'){
+                if (['ppl', 'ppr', 'pe', 'pw'].includes(cell) && this.key == 'idle'){
                     this.tilingLogic.tileMapNext[y][x] = 'p';
                 }
                 if (cell == 'p'){
@@ -192,7 +194,25 @@ export class GameLogic{
                             //console.log('zonk push');
                             this.tilingLogic.tileMapNext[y][x] = direction.x < 0 ? 'ppl': 'ppr';
                         }
+
+                        const isExit = this.tilingLogic.checkCell(['x'], x + direction.x, y+ direction.y) && this.collected >= this.targetCount;
+                        if (isExit){
+                            this.tilingLogic.tileMapNext[y][x] = 'pe';
+                        }
                     }
+                }
+                if (['pe'].includes(cell)){
+                    const direction = directions[this.key as keyof typeof directions];
+                    if (direction){ 
+                        const isExit = this.tilingLogic.checkCell(['x'], x + direction.x, y+ direction.y);
+                        if (isExit){
+                            this.tilingLogic.tileMapNext[y][x] = 'pw';
+                        }
+                    }
+                }
+                if (['pw'].includes(cell)){
+                    this.tilingLogic.tileTransitions[y][x] = {x: 0, y:0, type: 'idle'};
+                    this.tilingLogic.tileMapNext[y][x] = 'e';
                 }
                 if (['ppl', 'ppr'].includes(cell)){
                     const direction = directions[this.key as keyof typeof directions];

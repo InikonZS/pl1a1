@@ -52,8 +52,9 @@ export const App = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const actualKeyRef = useRef('idle');
   const resources = usePreloader();
-  const [collected, setCollected] = useState(0);
+  const [collected, setCollected] = useState<{current: number, target: number}>({current: 0, target: 0});
   const [failed, setFailed] = useState(false);
+  const [win, setWin] = useState(false);
   const [levelHash, setLevelHash] = useState(0);
   //const [level, setLevel] = useState<string[][]>(null);
 
@@ -276,11 +277,13 @@ export const App = () => {
       return;
     }
     setFailed(false);
+    setWin(false);
+    let win = false;
     const logic = new GameLogic(levels[0]);
     let cameraPos: {x: number, y: number} = null;
     const playerPos = {x: 0, y: 0};
     logic.onMainTick = () => {
-      setCollected(logic.collected);
+      setCollected({current: logic.collected, target: logic.targetCount});
     }
     logic.onTransitionTick = (time) => {
       const tileSize = 32;
@@ -289,7 +292,10 @@ export const App = () => {
       let foundPlayer = false;
       logic.tilingLogic.tileMapNext.forEach((row, y) => {
         row.forEach((cell, x) => {
-          if (['p','ppr', 'ppl'].includes(cell)){
+          if (['p','ppr', 'ppl', 'pe', 'pw'].includes(cell)){
+            if (cell == 'pw'){
+              win = true;
+            }
             playerPos.x = x - Math.floor((ctx.canvas.width / tileSize)/2), //Math.floor(logic.tilingLogic.tileMap[0].length /2);
             playerPos.y = y - Math.floor((ctx.canvas.height / tileSize)/2) //Math.floor(logic.tilingLogic.tileMap.length /1);
             if (cameraPos == null){
@@ -301,7 +307,11 @@ export const App = () => {
       });
       if (!foundPlayer){
         //console.log('failed');
-        setFailed(true);
+        if (win){
+          setWin(true);
+        } else {
+          setFailed(true);
+        }
       }
       //if (cameraPos.x !=playerPos.x || cameraPos.y != playerPos.y){
         //cameraPos.x += Math.sign(-cameraPos.x + playerPos.x)/10;
@@ -324,7 +334,7 @@ export const App = () => {
         row.forEach((cell, x) => {
           const ani = logic.tilingLogic.tileTransitions[y][x];
           const colors = { w: 'rgb(137, 137, 137)', p: '#f22', e: '#0000', b: '#090', z: '#ff0', i: '#25c' };
-          const images = { p: './supahero.png', ppl: './supahero.png', ppr: './supahero.png' ,w: './supawall.png', b: './supapcb.png', z: './supazonk.png', i: './supainf.png', zd: './supazonk.png', id: './supainf.png', m: './supamicro.png', '[': './supamicrostart.png', ']': './supamicroend.png', x: './supaexit.png', d: './supadisc.png', da: './supadisc.png', o: './expl1.png'};
+          const images = { p: './supahero.png', ppl: './supahero.png', ppr: './supahero.png', pe: './supahero.png', pw: './supahero.png' ,w: './supawall.png', b: './supapcb.png', z: './supazonk.png', i: './supainf.png', zd: './supazonk.png', id: './supainf.png', m: './supamicro.png', '[': './supamicrostart.png', ']': './supamicroend.png', x: './supaexit.png', d: './supadisc.png', da: './supadisc.png', o: './expl1.png'};
           ctx.fillStyle = colors[cell as keyof typeof colors];
           const image = resources[images[cell as keyof typeof images]];
           const drawTile = (x: number, y: number, w = 1, h = 1, sheetOffset = 0, sheetWidth = 0)=>{
@@ -370,7 +380,7 @@ export const App = () => {
                 drawTileAtlas((x + ani.x * time), (y + ani.y * time), 1, 1, 2+(2+32)*11, 32);
               } else if (cell == 'ppr'){
                 drawTileAtlas((x + ani.x * time), (y + ani.y * time), 1, 1, 2+(2+32)*12, 32);
-              } else {
+              }  else {
                 drawTile((x + ani.x * time), (y + ani.y * time));
               }
               //ctx.fillRect((x + ani.x * time) * tileSize, (y + ani.y * time) * tileSize, tileSize, tileSize);
@@ -391,15 +401,22 @@ export const App = () => {
               if (cell == 'o'){
                 drawTileAtlas(x, y, 1, 1, 2+(2+32)* timeCut(time, 7), 32);
               }
+              if (cell == 'pw'){
+                drawTileAtlas(x, y, 1, 1, 2+(2+32)* (timeCut(time, 7)+32), 32);
+              }
             }
           } else {
             if (cell == 'p'){
+              drawTileAtlas(x, y, 1, 1, 2+(2+32)*14, 32);
+            } else if (cell == 'pe'){
               drawTileAtlas(x, y, 1, 1, 2+(2+32)*14, 32);
             } else if (cell == 'ppl'){
               drawTileAtlas(x, y, 1, 1, 2+(2+32)*11, 32);
             } else if (cell == 'ppr'){
               drawTileAtlas(x, y, 1, 1, 2+(2+32)*12, 32);
-            }  else {
+            } else if (cell == 'pw'){
+              
+            } else {
               drawTile(x, y);
             }
           }
@@ -429,8 +446,9 @@ export const App = () => {
     <div ref={overlayRef} className={style.overlay}>
       {/* <CanvasTest></CanvasTest> */}
       {!resources && <div className={style.loading}>loading...</div>}
-      <div className={style.loading}>Collected {collected}/20</div>
+      <div className={style.loading}>Collected {collected.current}/{collected.target}</div>
       {failed && <div className={style.loading} onClick={()=>{setLevelHash(last=>last+1)}}>Restart</div>}
+      {win && <div className={style.loading} onClick={()=>{setLevelHash(last=>last+1)}}>Win restart</div>}
       {resources && <canvas ref={canvasRef} width={800} height={600} className={style.canvas}></canvas>}
     </div>
   </div>

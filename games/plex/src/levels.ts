@@ -46,4 +46,4 @@ const level4 = [
     'wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww',
 ].map(it=>it.split(''));
 
-export const levels = [level4];
+export const levels = [{field: level3, count: 4}];
