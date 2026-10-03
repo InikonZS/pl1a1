@@ -4,17 +4,17 @@ const level1 = [
     'wbbzibbbbw',
     'wbbzibbbbw',
     'wbbbbbbbbw',
-    'wbbbbbbbbw',
+    'wxbbbbbbbw',
     'wwwwwwwwww',
 ].map(it=>it.split(''));
 
 const level2 = [
     'wwwwwwwwww',
-    'wzzzzzzwpw',
+    'wizzziiwpw',
     'wzzzzzzwbw',
     'wzzzzzzwbw',
     'wwwwbwwwbw',
-    'wbbbbbbbbw',
+    'wxbbbbbbbw',
     'weeeeeeeew',
     'weeeeeeeew',
     'weeeeeeeew',
@@ -46,4 +46,89 @@ const level4 = [
     'wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww',
 ].map(it=>it.split(''));
 
-export const levels = [{field: level3, count: 4}];
+const level5 = [
+    'wwwwwwwwww',
+    'wzpbbbbbbw',
+    'wmebbbbizw',
+    'weewbbbizw',
+    'wemwbbbizw',
+    'weewbbbizw',
+    'wmewbbbizw',
+    'weewbbbizw',
+    'wemwbbbizw',
+    'weewbbzzzw',
+    'wmewbbzzzw',
+    'wiebbbbbxw',
+    'wwwwwwwwww',
+].map(it=>it.split(''));
+
+const level6 = [
+    'wwwwwwwwww',
+    'wpbbbbbbbw',
+    'wbbbbbdbbw',
+    'wbbbbbdbbw',
+    'wbbbbbbbbw',
+    'wbbbbbzbbw',
+    'wmmmmmibbw',
+    'wbbimmmmbw',
+    'wbbimmxmbw',
+    'wwwwwwwwww',
+].map(it=>it.split(''));
+
+const level7 = [
+    'wwwwwwwwww',
+    'wpzbzbbdbw',
+    'wbzbibbibw',
+    'wbzbbbbziw',
+    'wbzbbbbzzw',
+    'wbzbbbbbzw',
+    'wbzbbbbbbw',
+    'wbzzzzzzzw',
+    'wbbbbbbbbw',
+    'wbbbxbbbbw',
+    'wwwwwwwwww',
+].map(it=>it.split(''));
+
+const level8 = [
+    'wwwwwwwwww',
+    'wpibbbbbbw',
+    'wbzzizzibw',
+    'wbizzbzzzw',
+    'wbzzzbbibw',
+    'wbiibbbibw',
+    'wbziiiizbw',
+    'wbbzzizzzw',
+    'wbbbbbbbbw',
+    'wbbbbbbbbw',
+    'wbbbxbbbbw',
+    'wwwwwwwwww',
+].map(it=>it.split(''));
+
+const level9 = [
+    'wwwwwwwwww',
+    'wpdddddbzw',
+    'wbbbbbbbbw',
+    'wwwwwwwwbw',
+    'wxzzzibwbw',
+    'wzzzzibwbw',
+    'wzzzzibwbw',
+    'wbbbbbbwbw',
+    'wbbbbbbwbw',
+    'wwwdwwwwbw',
+    'wbbbbbbbbw',
+    'wwwwwwwwww',
+].map(it=>it.split(''));
+
+//export const levels = [{field: level8, count: 26}];
+export const levels = [
+    {field: level1, count: 2},
+    {field: level2, count: 3},
+    {field: level3, count: 4},
+    {field: level5, count: 8},
+
+    {field: level6, count: 3},    
+    {field: level7, count: 2},  
+    {field: level8, count: 13},  
+    {field: level9, count: 3},  
+    {field: level4, count: 26},
+];

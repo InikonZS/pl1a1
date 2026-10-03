@@ -4,6 +4,7 @@ import { levels } from './levels';
 import { GameLogic } from './tilingLogic';
 import { CanvasTest } from './canvasTest';
 import { MobileStick } from './mobileStick';
+import { MenuSlider } from './menuSlider';
 
 const usePreloader = ()=>{
   const [resources, setResources] = useState<Record<string, HTMLImageElement>>(null);
@@ -57,6 +58,7 @@ export const App = () => {
   const [failed, setFailed] = useState(false);
   const [win, setWin] = useState(false);
   const [levelHash, setLevelHash] = useState(0);
+  const [levelIndex, setLevelIndex] = useState(null);
   //const [level, setLevel] = useState<string[][]>(null);
 
   useEffect(() => {
@@ -274,13 +276,16 @@ export const App = () => {
   }, []);*/
 
   useEffect(()=>{
+    if(levelIndex==null){
+      return;
+    }
     if (!canvasRef.current || !resources){
       return;
     }
     setFailed(false);
     setWin(false);
     let win = false;
-    const logic = new GameLogic(levels[0]);
+    const logic = new GameLogic(levels[levelIndex]);
     let cameraPos: {x: number, y: number} = null;
     const playerPos = {x: 0, y: 0};
     logic.onMainTick = () => {
@@ -310,6 +315,7 @@ export const App = () => {
         //console.log('failed');
         if (win){
           setWin(true);
+          //setLevelIndex(null);
         } else {
           setFailed(true);
         }
@@ -441,17 +447,43 @@ export const App = () => {
     return ()=>{
       cancelAnimationFrame(rafId);
     }
-  }, [resources, levelHash]);
+  }, [resources, levelHash, levelIndex]);
 
   return <div ref={appRef} className={style.app} onDragStart={(e) => { e.preventDefault() }}>
     <div ref={overlayRef} className={style.overlay}>
       {/* <CanvasTest></CanvasTest> */}
       {!resources && <div className={style.loading}>loading...</div>}
-      <div className={style.loading}>Collected {collected.current}/{collected.target}</div>
-      {failed && <div className={style.loading} onClick={()=>{setLevelHash(last=>last+1)}}>Restart</div>}
-      {win && <div className={style.loading} onClick={()=>{setLevelHash(last=>last+1)}}>Win restart</div>}
-      {resources && <canvas ref={canvasRef} width={800} height={600} className={style.canvas}></canvas>}
-      <MobileStick onActualKey={(key)=>{actualKeyRef.current = key}}></MobileStick>
+      {levelIndex != null && <div className={style.topPanel}>
+        <div className={style.topButton} onClick={()=>{setLevelIndex(null)}}>Menu</div>
+        <div className={style.topButton} onClick={()=>{setLevelHash(last=>last+1)}}>Restart</div>
+        <div className={style.collected}>Collected <span>{collected.current}</span>/<span>{collected.target}</span></div>
+      </div>}
+      {resources && <div className={style.canvasWrap}>
+        <canvas ref={canvasRef} width={800} height={600} className={style.canvas}></canvas>
+      </div>}
+      {levelIndex != null && <MobileStick onActualKey={(key)=>{actualKeyRef.current = key}}></MobileStick>}
+      {levelIndex == null &&<MenuSlider onSelect={(level)=>{
+        console.log('menu select', level)
+        setLevelIndex(Number(level));
+      }}></MenuSlider>}
     </div>
+    {((failed || win) && levelIndex !=null) && <div className={style.overlay}>
+      {failed && <div className={style.gameOverPopup}>
+        <div className={style.gameOverTitle}>
+          GAME OVER
+        </div>
+        <div className={style.gameOverRestart} onClick={()=>{setLevelHash(last=>last+1)}}>
+          RESTART
+        </div>
+      </div>}
+      {win && <div className={style.gameOverPopup}>
+        <div className={style.gameOverTitle}>
+          LEVEL COMPLETED
+        </div>
+        <div className={style.gameOverRestart} onClick={()=>{setLevelIndex(null)}}>
+          MENU
+        </div>
+      </div>}
+    </div>}
   </div>
 }

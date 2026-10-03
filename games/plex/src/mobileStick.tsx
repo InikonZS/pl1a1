@@ -61,7 +61,7 @@ export const MobileStick = ({onActualKey}: {onActualKey: (key: string)=>void}) =
             }
             const segment = getSegment({x: e.clientX, y: e.clientY})
             //console.log('move', segment, keyHolder);
-            setActualKey(segmentMap[segment] || 'idle');
+            setActualKey((last)=>segmentMap[segment] || last);
             //pushHolder(segmentMap[segment]);
         }
 
@@ -93,7 +93,7 @@ export const MobileStick = ({onActualKey}: {onActualKey: (key: string)=>void}) =
         onActualKey(actualKey);
     }, [actualKey])
 
-    return <div ref={containerRef} className={style.mobileJoystick} onPointerDown={(e) => {
+    return <div ref={containerRef} className={style.mobileJoystick} onContextMenu={(e)=>e.preventDefault()} onPointerDown={(e) => {
         setMoveStart({
             clientPosition: { x: e.clientX, y: e.clientY },
             pointerId: e.pointerId

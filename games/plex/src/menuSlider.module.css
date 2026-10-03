@@ -1,0 +1,103 @@
+.menuWrapper{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: #000d;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    --base: 1px;
+}
+
+.menuSizer{
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    width: calc((var(--base) * 350));
+    height: calc((var(--base) * 580));
+    gap: 10px;
+}
+
+.logo{
+    color: #fff;
+    font-size: calc((var(--base) * 30));
+    padding-top: 10px;
+}
+
+.menuSlider{
+    /* max-width: 400px; */
+    /* max-height: 500px; */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    position: relative;
+}
+
+.menuSliderAnchor{
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.menuItem{
+    color: #fff;
+    /* width: calc((var(--base) * 50));
+    height: calc((var(--base) * 50));
+    border-radius: 100%; */
+    /* border: 1px solid #fff; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.menuItemAbs{
+    position: absolute;
+}
+.menuItemInner{
+    position: absolute;
+    width: calc((var(--base) * 50));
+    height: calc((var(--base) * 50));
+    border-radius: 100%;
+    color: #fff;
+    border: 1px solid #999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #000;
+    transform: translate(-50%, -50%);
+}
+
+.menuItemDescription{
+    font-size: calc((var(--base) * 10));
+    background-color: #000;
+    padding: calc((var(--base) * 4));
+    border: 1px solid #999;
+    border-radius: calc((var(--base) * 3));
+    position: absolute;
+    /* left: -1px; */
+    /* bottom: -22px; */
+    bottom: calc((var(--base) * (-8)));;
+    width: max-content;
+}
+
+.menuLine{
+    display: flex;
+    align-items: center;
+}
+
+.menuConnection{
+    border-left: 1px solid #fff;
+    height: 30px;
+}
+
+.menuConnectionH{
+    border-top: 1px solid #fff;
+    width: 30px;
+}
