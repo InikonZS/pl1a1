@@ -1,6 +1,11 @@
 import { type ReactElement, useEffect, useRef, useState } from 'react';
 import style from './application.module.css'
 import { findPath, indexateMap } from './tools';
+import { ScreenStick } from './screenStick';
+
+const lerp = (a: number, b: number, t: number)=>{
+  return a + (b - a) * t;
+}
 
 const usePreloader = ()=>{
   const [resources, setResources] = useState<Record<string, HTMLImageElement>>(null);
@@ -10,7 +15,8 @@ const usePreloader = ()=>{
     const promises =
     [
       'ground_grass.png',
-      'ground_obst.png'
+      'ground_obst.png',
+      'ground_tree.png'
     ].map(name=>{
       const promise = new Promise<void>(resolve=>{
         const image = new Image();
@@ -34,6 +40,46 @@ const usePreloader = ()=>{
   return resources;
 }
 
+function getCanvasRenderedRect(canvas: HTMLCanvasElement) {
+  // 1. Получаем CSS-размеры всего элемента canvas
+  const cssRect = canvas.getBoundingClientRect();
+  
+  // 2. Истинные размеры буфера отрисовки
+  const bufferWidth = canvas.width;
+  const bufferHeight = canvas.height;
+  
+  if (!bufferWidth || !bufferHeight) return cssRect;
+
+  // 3. Сравниваем соотношения сторон CSS-блока и буфера
+  const cssAspect = cssRect.width / cssRect.height;
+  const bufferAspect = bufferWidth / bufferHeight;
+
+  let renderWidth = cssRect.width;
+  let renderHeight = cssRect.height;
+  let xOffset = 0;
+  let yOffset = 0;
+
+  if (bufferAspect > cssAspect) {
+    // Ограничение по ширине (поля сверху и снизу)
+    renderHeight = cssRect.width / bufferAspect;
+    yOffset = (cssRect.height - renderHeight) / 2;
+  } else {
+    // Ограничение по высоте (поля слева и справа)
+    renderWidth = cssRect.height * bufferAspect;
+    xOffset = (cssRect.width - renderWidth) / 2;
+  }
+
+  return {
+    left: cssRect.left + xOffset,
+    top: cssRect.top + yOffset,
+    width: renderWidth,
+    height: renderHeight,
+    // Смещение внутри прямоугольника getBoundingClientRect
+    xOffset: xOffset,
+    yOffset: yOffset
+  };
+}
+
 export const App = () => {
   const appRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -41,7 +87,9 @@ export const App = () => {
   const resources = usePreloader();
   const [fps, setFps] = useState(60);
   const hoverTile = useRef<{x: number, y: number}>(null);
-  const tileSize = 12;
+  const camera = useRef<{x: number, y: number}>({x: 0, y: 0});
+  const scrollData = useRef<{x: number, y: number}>(null);
+  const tileSize = 32;
 
   useEffect(()=>{
     if (!canvasRef.current || !resources){
@@ -89,6 +137,11 @@ export const App = () => {
     const pattern2 = ctx.createPattern(resources['ground_obst.png'], "repeat");
     pattern2.setTransform(new DOMMatrix().scale(tileSize / resources['ground_obst.png'].naturalWidth, tileSize / resources['ground_obst.png'].naturalHeight));
 
+    const pattern3 = ctx.createPattern(resources['ground_tree.png'], "repeat");
+    pattern3.setTransform(new DOMMatrix().scale(tileSize / resources['ground_obst.png'].naturalWidth, tileSize / resources['ground_obst.png'].naturalHeight));
+    const pattern3a = ctx.createPattern(resources['ground_tree.png'], "repeat");
+    pattern3a.setTransform(new DOMMatrix().translate(0, -tileSize).scale(tileSize / resources['ground_obst.png'].naturalWidth, tileSize / resources['ground_obst.png'].naturalHeight));
+
     const checkNeutrals = ()=>{
       neutrals.forEach(neutral=>{
         if (activeHero.position.x == neutral.position.x && activeHero.position.y == neutral.position.y){
@@ -100,19 +153,26 @@ export const App = () => {
       neutrals = neutrals.filter(it=>it.value);
     }
     let moveTicks = 0;
+    let initHeroPos: {x: number, y: number} = {...activeHero.position};
     const processMove = ()=>{
       if (!movingPath || !movingPath.length){
         return;
       }   
       moveTicks++;
       if (moveTicks<3){
+        const lastPoint = movingPath[movingPath.length - 1 - movingIndex];
+        //activeHero.position.x = lerp(initHeroPos.x, lastPoint.x, moveTicks/3);
+        //activeHero.position.y = lerp(initHeroPos.y, lastPoint.y, moveTicks/3);
         return;
       }
       moveTicks = 0;
+      initHeroPos = {...activeHero.position};
       const pathPoint = movingPath[movingPath.length - 1 - movingIndex];
       if (pathPoint){
         activeHero.position.x = pathPoint.x;
         activeHero.position.y = pathPoint.y;
+        camera.current = {x: (-activeHero.position.x +10) * tileSize , y: (-activeHero.position.y +10) * tileSize}
+        patternTransform();
         checkNeutrals();
         movingIndex+=1;
       } else {
@@ -121,10 +181,41 @@ export const App = () => {
       }
     }
 
+    const processCamera = ()=>{
+      if (!scrollData.current){
+        return;
+      }
+      
+      const sensitive = -16;
+      camera.current = {x: camera.current.x + scrollData.current.x * sensitive, y: camera.current.y + scrollData.current.y * sensitive}
+      patternTransform();
+    }
+
+    const patternTransform = ()=>{
+      const patternFix = new DOMMatrix().translate(camera.current.x % tileSize, camera.current.y % tileSize).scale(tileSize / resources['ground_grass.png'].naturalWidth, tileSize / resources['ground_grass.png'].naturalHeight);
+      const patternFixA = new DOMMatrix().translate(camera.current.x % tileSize, camera.current.y % (tileSize * 2) - tileSize).scale(tileSize / resources['ground_grass.png'].naturalWidth, tileSize / resources['ground_grass.png'].naturalHeight);
+      const patternFix0 = new DOMMatrix().translate(camera.current.x % tileSize, camera.current.y % (tileSize * 2)).scale(tileSize / resources['ground_grass.png'].naturalWidth, tileSize / resources['ground_grass.png'].naturalHeight);
+      
+
+      pattern1.setTransform(patternFix);
+      pattern2.setTransform(patternFix);
+      pattern3.setTransform(patternFix0);
+      pattern3a.setTransform(patternFixA);
+    }
+
+    const tiledX = (x: number) => {
+      return Math.floor(x * tileSize + camera.current.x);
+    }
+
+    const tiledY = (y: number) => {
+      return Math.floor(y * tileSize + camera.current.y);
+    }
+
     let rafId: number = null;
     const render = (time: number)=>{
       const renderStartTime = performance.now();
 
+      processCamera();
       processMove();
       const same = hoverTile.current && (hoverTile.current.x == activeHero.position.x && hoverTile.current.y == activeHero.position.y);
       const path = (hoverTile.current && !same) ? findPath(indexateMap(tiles, activeHero.position), hoverTile.current): [];
@@ -137,23 +228,23 @@ export const App = () => {
           if (cell != '1') {
               return;
           }
-          ctx.rect(x * tileSize, y * tileSize, tileSize, tileSize);
+          ctx.rect(tiledX(x), tiledY(y), tileSize, tileSize);
       }));
       ctx.fill();
 
-      ctx.fillStyle = pattern2;
+      ctx.fillStyle = pattern1;
       ctx.beginPath();
       tiles.forEach((row, y) => row.forEach((cell, x) => {
           if (cell != '2') {
               return;
           }
-          ctx.rect(x * tileSize, y * tileSize, tileSize, tileSize);
+          ctx.rect(tiledX(x), tiledY(y), tileSize, tileSize);
       }));
       ctx.fill();
       
       ctx.beginPath();
       heros.forEach(hero=>{
-        ctx.rect(hero.position.x * tileSize, hero.position.y * tileSize, tileSize, tileSize);
+        ctx.rect(tiledX(hero.position.x), tiledY(hero.position.y), tileSize, tileSize);
       }); 
       ctx.fillStyle = '#ff0';
       ctx.fill();
@@ -162,12 +253,12 @@ export const App = () => {
       heros.forEach(hero=>{
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(hero.value.toString(), hero.position.x * tileSize + tileSize/2, hero.position.y * tileSize + tileSize/2);
+        ctx.fillText(hero.value.toString(), tiledX(hero.position.x) + tileSize/2, tiledY(hero.position.y) + tileSize/2);
       }); 
 
       ctx.beginPath();
       neutrals.forEach(hero=>{
-        ctx.rect(hero.position.x * tileSize, hero.position.y * tileSize, tileSize, tileSize);
+        ctx.rect(tiledX(hero.position.x), tiledY(hero.position.y), tileSize, tileSize);
       }); 
       ctx.fillStyle = '#f00';
       ctx.fill();
@@ -176,22 +267,43 @@ export const App = () => {
       neutrals.forEach(hero=>{
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(hero.value.toString(), hero.position.x * tileSize + tileSize/2, hero.position.y * tileSize + tileSize/2);
+        ctx.fillText(hero.value.toString(), tiledX(hero.position.x) + tileSize/2, tiledY(hero.position.y) + tileSize/2);
       }); 
 
       if (hoverTile.current){
         ctx.fillStyle= `#99f9`;
-        ctx.fillRect(hoverTile.current.x * tileSize, hoverTile.current.y * tileSize, tileSize, tileSize);
+        ctx.fillRect(tiledX(hoverTile.current.x), tiledY(hoverTile.current.y), tileSize, tileSize);
       }
 
       if (path){
         ctx.beginPath();
         ctx.fillStyle = '#0009';
         path.forEach(tile=>{
-          ctx.rect(tile.x * tileSize, tile.y * tileSize, tileSize, tileSize);
+          ctx.moveTo(tiledX(tile.x), tiledY(tile.y));
+          ctx.ellipse(tiledX(tile.x) + tileSize/2, tiledY(tile.y) + tileSize/2, tileSize/4, tileSize/4, 0, 0, Math.PI*2);
         });
         ctx.fill();
       }
+
+      ctx.fillStyle = pattern3;
+      ctx.beginPath();
+      tiles.forEach((row, y) => row.forEach((cell, x) => {
+          if (cell != '2' || y%2!=1) {
+              return;
+          }
+          ctx.rect(tiledX(x), tiledY(y)- tileSize, tileSize, tileSize*2);
+      }));
+      ctx.fill();
+
+      ctx.fillStyle = pattern3a;
+      ctx.beginPath();
+      tiles.forEach((row, y) => row.forEach((cell, x) => {
+          if (cell != '2' || y%2!=0) {
+              return;
+          }
+          ctx.rect(tiledX(x), tiledY(y)- tileSize, tileSize, tileSize*2);
+      }));
+      ctx.fill();
       
       const fps = 1000/(performance.now() - renderStartTime);
       setFps((last)=>{
@@ -214,13 +326,26 @@ export const App = () => {
       <div className={style.loading}>{Math.floor(fps)}</div>
       {resources && <div className={style.canvasWrap}>
         <canvas ref={canvasRef} width={800} height={600} className={style.canvas} onPointerMove={(e)=>{
-          const bounds = canvasRef.current.getBoundingClientRect();
+          const bounds = getCanvasRenderedRect(canvasRef.current);//canvasRef.current.getBoundingClientRect();
           const scaler = {x: canvasRef.current.width / bounds.width, y: canvasRef.current.height / bounds.height}
-          const tilePos = {x: Math.floor((e.clientX - bounds.left) / tileSize * scaler.x), y: Math.floor((e.clientY - bounds.top) / tileSize * scaler.y)}
+          const tilePos = {x: Math.floor((e.clientX - bounds.left - camera.current.x) / tileSize * scaler.x), y: Math.floor((e.clientY - bounds.top - camera.current.y) / tileSize * scaler.y)}
           //console.log(tilePos)
           hoverTile.current = tilePos;
         }}></canvas>
       </div>}
+      <div className={style.controlPanel}>
+        <div className={style.heroes}>
+          {new Array(4).fill(null).map((it, i)=>{
+            return <div className={style.hero}>{i}</div>
+          })}
+        </div>
+        <div className={style.turnButton}>Turn</div>
+        { <div className={style.minimap}>
+          <ScreenStick onInput={(data)=>{
+            scrollData.current = data?.result;
+          }}></ScreenStick>
+        </div> }
+      </div>
     </div>
   </div>
 }

@@ -15,7 +15,8 @@ export function indexateMap(cells: string[][], initialPoint: { x: number, y: num
                 let moved = { x: point.x + move.x, y: point.y + move.y };
                 if (moved.y >= 0 && moved.x >= 0 && moved.y < waveField.length && moved.x < waveField[0].length) {
                     let cell = waveField[moved.y][moved.x];
-                    if (cell != undefined && cell > currentGen) {
+                    const diagCheck = waveField[moved.y][point.x] != -1 && waveField[point.y][moved.x]!= -1;
+                    if (cell != undefined && cell > currentGen && diagCheck) {
                         nextGen.push(moved);
                         waveField[moved.y][moved.x] = currentGen;
                     }
